@@ -1,0 +1,71 @@
+version: "3.9"
+
+# ============================================================
+# Customer Success Automation Hub - Docker Compose
+# ------------------------------------------------------------
+# 一鍵啟動完整 demo：
+#   docker compose up --build
+# 啟動後：
+#   - API     : http://localhost:8000  (Swagger: /docs)
+#   - Web UI  : http://localhost:5173
+#   - DB      : Postgres on localhost:5432 (csah / csah)
+# ============================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: csah-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: csah
+      POSTGRES_PASSWORD: csah
+      POSTGRES_DB: csah
+    ports:
+      - "5432:5432"
+    volumes:
+      - csah_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csah -d csah"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: csah-api
+    restart: unless-stopped
+    environment:
+      APP_ENV: docker
+      APP_DEBUG: "true"
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8000"
+      DATABASE_URL: postgresql+psycopg://csah:csah@db:5432/csah
+      CORS_ALLOW_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      SEED_ON_STARTUP: "true"
+      AI_PROVIDER: mock
+      DYNAMICS_CRM_MODE: mock
+      BUSINESS_CENTRAL_MODE: mock
+      POWER_AUTOMATE_MODE: mock
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: csah-web
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  csah_db_data:
