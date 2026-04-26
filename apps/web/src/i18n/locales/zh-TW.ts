@@ -19,14 +19,14 @@ const translation = {
     no: "否",
   },
   nav: {
-    dashboard: "Executive Dashboard",
-    crm: "CRM Pipeline",
-    onboarding: "Customer Onboarding",
-    bpm: "BPM Requests",
-    automation: "Automation Flows",
-    tickets: "IT Operation",
-    ai: "AI Assistant",
-    audit: "Audit Logs",
+    dashboard: "主管儀表板",
+    crm: "CRM 銷售管道",
+    onboarding: "客戶導入",
+    bpm: "BPM 申請",
+    automation: "自動化流程",
+    tickets: "IT 維運",
+    ai: "AI 助理",
+    audit: "稽核紀錄",
   },
   status: {
     new: "全新",
@@ -82,9 +82,9 @@ const translation = {
     high: "高",
   },
   dashboard: {
-    title: "Executive Dashboard",
+    title: "主管儀表板",
     subtitle:
-      "一頁掌握 CRM、Customer Success、BPM、Automation 與 IT Operation 的健康狀況。",
+      "一頁掌握 CRM、客戶成功、BPM、自動化與 IT 維運的健康狀況。",
     kpi: {
       pipeline: "CRM Pipeline (加權)",
       pipelineHint: "{{count}} 個進行中商機",
@@ -118,7 +118,7 @@ const translation = {
     },
   },
   crm: {
-    title: "CRM Pipeline",
+    title: "CRM 銷售管道",
     subtitle: "Lead-to-Cash 流程：捕捉潛在客戶 → 商機 → 報價 → 成交。",
     newLead: {
       title: "新增 Lead",
@@ -158,7 +158,7 @@ const translation = {
     },
   },
   onboarding: {
-    title: "Customer Onboarding",
+    title: "客戶導入",
     subtitle: "Lead 成交後啟動的客戶導入專案：包含任務時間軸、健康分數與風險警示。",
     risks: {
       title: "未處理風險警示",
@@ -176,7 +176,7 @@ const translation = {
     },
   },
   bpm: {
-    title: "BPM Requests",
+    title: "BPM 申請",
     subtitle:
       "模擬 Microsoft Power Automate Approvals + Business Central 整合：草稿 → 送審 → 簽核 → 同步到 BC。",
     create: {
@@ -208,7 +208,7 @@ const translation = {
     empty: "尚未有請求。建立一筆來體驗 BPM 簽核流程。",
   },
   automation: {
-    title: "Automation Flows",
+    title: "自動化流程",
     subtitle: "Mock Power Automate engine：JSON 驅動的 trigger / condition / action workflow。",
     definitions: {
       title: "Workflow 定義",
@@ -232,7 +232,7 @@ const translation = {
     },
   },
   tickets: {
-    title: "IT Operation Tickets",
+    title: "IT 維運工單",
     subtitle: "Severity / SLA 監控。Workflow 自動建立的 ticket 也會出現在這裡。",
     table: {
       title: "Tickets",
@@ -249,7 +249,7 @@ const translation = {
     },
   },
   ai: {
-    title: "AI Assistant",
+    title: "AI 助理",
     subtitle:
       "mock AI provider — 不需 API key 即可展示。可在 .env 改 AI_PROVIDER 切換為 OpenAI / Anthropic / Azure OpenAI。",
     confidence: "confidence {{value}}%",
@@ -282,7 +282,7 @@ const translation = {
     },
   },
   audit: {
-    title: "Audit Logs",
+    title: "稽核紀錄",
     subtitle: "所有 CRM、BPM、Automation、Tickets 行為的事件流。",
     filters: {
       title: "Filters",

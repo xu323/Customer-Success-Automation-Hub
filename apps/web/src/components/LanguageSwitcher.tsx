@@ -1,19 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n";
+import {
+  LANGUAGE_LABELS,
+  SUPPORTED_LANGUAGES,
+  getActiveLocale,
+  type SupportedLanguage,
+} from "@/i18n";
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
-
-  const current = (() => {
-    const code = (i18n.resolvedLanguage ?? i18n.language ?? "zh-TW") as string;
-    if ((SUPPORTED_LANGUAGES as readonly string[]).includes(code)) return code as SupportedLanguage;
-    if (code.toLowerCase().startsWith("ja")) return "ja";
-    if (code.toLowerCase().startsWith("zh")) return "zh-TW";
-    if (code.toLowerCase().startsWith("en")) return "en";
-    return "zh-TW";
-  })();
+  // Re-evaluated on every render; useTranslation triggers a re-render whenever
+  // i18n.language changes, so this stays in sync with the active locale.
+  const current = getActiveLocale();
 
   const handleChange = (lang: SupportedLanguage) => {
+    if (lang === current) return;
     void i18n.changeLanguage(lang);
   };
 

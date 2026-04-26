@@ -23,6 +23,37 @@ const resources = {
   ja: { translation: ja },
 } as const;
 
+/**
+ * Map any incoming language code (browser, localStorage, detector) to one of
+ * our three supported codes. Handles "zh", "zh-Hant", "zh-Hans-CN", "zh-tw",
+ * "en-US", "ja-JP", "ja-jp" etc.
+ */
+export function normalizeLanguage(code: string | null | undefined): SupportedLanguage {
+  if (!code) return "zh-TW";
+  const lower = code.toLowerCase();
+  if (lower.startsWith("ja")) return "ja";
+  if (lower.startsWith("en")) return "en";
+  if (lower.startsWith("zh")) return "zh-TW";
+  return "zh-TW";
+}
+
+// One-time migration: if localStorage has a stale value (e.g. "zh", "zh-Hant",
+// "zh-CN", or anything outside our 3 supported codes), normalize it BEFORE
+// i18next's LanguageDetector reads it.
+if (typeof window !== "undefined") {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const normalized = normalizeLanguage(raw);
+      if (normalized !== raw) {
+        window.localStorage.setItem(STORAGE_KEY, normalized);
+      }
+    }
+  } catch {
+    /* localStorage unavailable (private mode etc.) — ignore */
+  }
+}
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -30,30 +61,30 @@ i18n
     resources,
     supportedLngs: SUPPORTED_LANGUAGES as unknown as string[],
     fallbackLng: "zh-TW",
-    nonExplicitSupportedLngs: true,
+    // Only load the active language. Without this, "zh-TW" would also load "zh",
+    // which has no registered resources and surfaces raw keys.
+    load: "currentOnly",
+    // Keep code casing untouched so "zh-TW" matches our resource key exactly.
+    cleanCode: false,
+    lowerCaseLng: false,
     interpolation: { escapeValue: false },
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],
       lookupLocalStorage: STORAGE_KEY,
       caches: ["localStorage"],
+      // Whatever the detector finds (raw localStorage value, navigator.language
+      // like "zh-Hant-TW", "en-GB" etc.), force it into one of our 3 codes.
+      convertDetectedLanguage: (lng: string) => normalizeLanguage(lng),
     },
     returnNull: false,
   });
 
-// Locale used by Intl.* APIs.
+/** Active language for our app, always one of the 3 supported codes. */
 export function getActiveLocale(): SupportedLanguage {
-  const lang = (i18n.resolvedLanguage ?? i18n.language ?? "zh-TW") as string;
-  if ((SUPPORTED_LANGUAGES as readonly string[]).includes(lang)) {
-    return lang as SupportedLanguage;
-  }
-  // navigator could give us "zh", "zh-Hant", "ja-JP" etc.
-  if (lang.toLowerCase().startsWith("ja")) return "ja";
-  if (lang.toLowerCase().startsWith("zh")) return "zh-TW";
-  if (lang.toLowerCase().startsWith("en")) return "en";
-  return "zh-TW";
+  return normalizeLanguage(i18n.resolvedLanguage ?? i18n.language ?? "zh-TW");
 }
 
-// Map our language codes to BCP 47 codes used by Intl.*.
+/** Map our language code to a BCP 47 code suitable for Intl.* APIs. */
 export function intlLocale(lang: SupportedLanguage = getActiveLocale()): string {
   switch (lang) {
     case "zh-TW":
