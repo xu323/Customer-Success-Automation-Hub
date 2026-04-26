@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { BPM } from "@/api/endpoints";
 import { Card, CardBody, CardHeader } from "@/components/Card";
-import { Badge, statusTone } from "@/components/Badge";
+import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/StateMessages";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -11,6 +12,8 @@ import type { BPMRequestType } from "@/types";
 const REQUEST_TYPES: BPMRequestType[] = ["VendorPayment", "EmployeePayment", "TravelRequest"];
 
 export function BPMPage() {
+  const { t } = useTranslation();
+  const labelOf = useStatusLabel();
   const qc = useQueryClient();
   const requestsQ = useQuery({ queryKey: ["bpm"], queryFn: BPM.listRequests });
 
@@ -21,6 +24,12 @@ export function BPMPage() {
     amount: "",
     approvers: "manager@partner.com,finance@partner.com",
   });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["bpm"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["audit"] });
+  };
 
   const create = useMutation({
     mutationFn: () =>
@@ -36,12 +45,6 @@ export function BPMPage() {
       invalidate();
     },
   });
-
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["bpm"] });
-    qc.invalidateQueries({ queryKey: ["dashboard"] });
-    qc.invalidateQueries({ queryKey: ["audit"] });
-  };
 
   const submit = useMutation({ mutationFn: (id: number) => BPM.submit(id), onSuccess: invalidate });
   const approve = useMutation({
@@ -60,14 +63,12 @@ export function BPMPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">BPM Requests</h1>
-        <p className="text-sm text-ms-muted">
-          模擬 Microsoft Power Automate Approvals + Business Central 整合：草稿 → 送審 → 簽核 → 同步到 BC。
-        </p>
+        <h1 className="text-2xl font-semibold">{t("bpm.title")}</h1>
+        <p className="text-sm text-ms-muted">{t("bpm.subtitle")}</p>
       </div>
 
       <Card>
-        <CardHeader title="Create new request" subtitle="VendorPayment / EmployeePayment / TravelRequest" />
+        <CardHeader title={t("bpm.create.title")} subtitle={t("bpm.create.subtitle")} />
         <CardBody>
           <form
             className="grid grid-cols-1 md:grid-cols-5 gap-3"
@@ -81,14 +82,33 @@ export function BPMPage() {
               value={form.request_type}
               onChange={(e) => setForm({ ...form, request_type: e.target.value as BPMRequestType })}
             >
-              {REQUEST_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {REQUEST_TYPES.map((rt) => (
+                <option key={rt} value={rt}>
+                  {t(`bpm.types.${rt}` as const)}
+                </option>
+              ))}
             </select>
-            <input className="bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm md:col-span-2" placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <input className="bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm" placeholder="Amount (USD)" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-            <input className="bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm" placeholder="Approvers (comma)" value={form.approvers} onChange={(e) => setForm({ ...form, approvers: e.target.value })} />
+            <input
+              className="bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm md:col-span-2"
+              placeholder={t("bpm.create.titlePlaceholder")}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+            <input
+              className="bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm"
+              placeholder={t("bpm.create.amountPlaceholder")}
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            />
+            <input
+              className="bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm"
+              placeholder={t("bpm.create.approversPlaceholder")}
+              value={form.approvers}
+              onChange={(e) => setForm({ ...form, approvers: e.target.value })}
+            />
             <div className="md:col-span-5">
               <Button variant="primary" type="submit" disabled={create.isPending}>
-                {create.isPending ? "Creating…" : "Create draft"}
+                {create.isPending ? t("bpm.create.submitting") : t("bpm.create.submit")}
               </Button>
             </div>
           </form>
@@ -102,8 +122,8 @@ export function BPMPage() {
             <Card key={r.id}>
               <CardHeader
                 title={`${r.request_number} — ${r.title}`}
-                subtitle={`${r.request_type} · ${formatCurrency(r.amount ?? 0, r.currency)} · Requester: ${r.requester}`}
-                action={<Badge tone={statusTone(r.status)}>{r.status}</Badge>}
+                subtitle={`${t(`bpm.types.${r.request_type}` as const)} · ${formatCurrency(r.amount ?? 0, r.currency)} · ${t("bpm.requester", { value: r.requester })}`}
+                action={<Badge tone={statusTone(r.status)}>{labelOf(r.status)}</Badge>}
               />
               <CardBody className="space-y-3">
                 <ol className="flex items-center gap-3 flex-wrap">
@@ -111,16 +131,20 @@ export function BPMPage() {
                     <li key={s.id} className="flex items-center gap-2">
                       <div
                         className={`h-7 w-7 rounded-full flex items-center justify-center text-xs border ${
-                          s.decision === "Approved" ? "bg-emerald-500/20 border-emerald-500/30" :
-                          s.decision === "Rejected" ? "bg-rose-500/20 border-rose-500/30" :
-                          "bg-white/5 border-ms-line"
+                          s.decision === "Approved"
+                            ? "bg-emerald-500/20 border-emerald-500/30"
+                            : s.decision === "Rejected"
+                            ? "bg-rose-500/20 border-rose-500/30"
+                            : "bg-white/5 border-ms-line"
                         }`}
                       >
                         {idx + 1}
                       </div>
                       <div>
                         <div className="text-sm">{s.approver}</div>
-                        <div className="text-xs text-ms-muted">{s.role ?? ""} · {s.decision}</div>
+                        <div className="text-xs text-ms-muted">
+                          {s.role ?? ""} · {labelOf(s.decision)}
+                        </div>
                       </div>
                       {idx < r.steps.length - 1 && <span className="text-ms-muted">→</span>}
                     </li>
@@ -128,34 +152,49 @@ export function BPMPage() {
                 </ol>
                 <div className="flex flex-wrap gap-2">
                   {r.status === "Draft" && (
-                    <Button variant="primary" onClick={() => submit.mutate(r.id)} disabled={submit.isPending}>Submit</Button>
+                    <Button variant="primary" onClick={() => submit.mutate(r.id)} disabled={submit.isPending}>
+                      {t("bpm.actions.submit")}
+                    </Button>
                   )}
                   {next && r.status === "Submitted" && (
                     <>
-                      <Button variant="primary" onClick={() => approve.mutate({ id: r.id, approver: next.approver })}>
-                        Approve as {next.approver}
+                      <Button
+                        variant="primary"
+                        onClick={() => approve.mutate({ id: r.id, approver: next.approver })}
+                      >
+                        {t("bpm.actions.approveAs", { approver: next.approver })}
                       </Button>
-                      <Button variant="danger" onClick={() => reject.mutate({ id: r.id, approver: next.approver })}>
-                        Reject as {next.approver}
+                      <Button
+                        variant="danger"
+                        onClick={() => reject.mutate({ id: r.id, approver: next.approver })}
+                      >
+                        {t("bpm.actions.rejectAs", { approver: next.approver })}
                       </Button>
                     </>
                   )}
                   {r.status === "Approved" && (
                     <Button variant="primary" onClick={() => syncBC.mutate(r.id)} disabled={syncBC.isPending}>
-                      Sync to Business Central
+                      {t("bpm.actions.syncToBC")}
                     </Button>
                   )}
                   {r.status === "Completed" && r.bc_sync_reference && (
-                    <Badge tone="success">BC document: {r.bc_sync_reference}</Badge>
+                    <Badge tone="success">{t("bpm.actions.bcDocument", { id: r.bc_sync_reference })}</Badge>
                   )}
                 </div>
-                <div className="text-xs text-ms-muted">Created {formatDate(r.created_at)} · Updated {formatDate(r.updated_at)}</div>
+                <div className="text-xs text-ms-muted">
+                  {t("bpm.timestamps.created", { date: formatDate(r.created_at) })} ·{" "}
+                  {t("bpm.timestamps.updated", { date: formatDate(r.updated_at) })}
+                </div>
               </CardBody>
             </Card>
           );
         })}
         {(requestsQ.data ?? []).length === 0 && (
-          <Card><CardBody><div className="text-sm text-ms-muted">尚未有請求。建立一筆來體驗 BPM 簽核流程。</div></CardBody></Card>
+          <Card>
+            <CardBody>
+              <div className="text-sm text-ms-muted">{t("bpm.empty")}</div>
+            </CardBody>
+          </Card>
         )}
       </div>
     </div>

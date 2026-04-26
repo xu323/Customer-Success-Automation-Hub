@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 type Tone =
   | "neutral"
@@ -74,4 +75,24 @@ export function riskTone(level: string): Tone {
     default:
       return "neutral";
   }
+}
+
+/**
+ * Return the localized label for a known status / severity / risk value.
+ * Falls back to the raw key if no translation exists.
+ */
+export function useStatusLabel() {
+  const { t } = useTranslation();
+  return (key: string) => {
+    const candidates = [
+      `status.${key}`,
+      `severity.${key}`,
+      `risk.${key}`,
+    ];
+    for (const c of candidates) {
+      const v = t(c, { defaultValue: "" });
+      if (v) return v;
+    }
+    return key;
+  };
 }

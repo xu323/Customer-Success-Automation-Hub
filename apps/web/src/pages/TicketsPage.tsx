@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Tickets } from "@/api/endpoints";
 import { Card, CardBody, CardHeader } from "@/components/Card";
-import { Badge, severityTone, statusTone } from "@/components/Badge";
+import { Badge, severityTone, statusTone, useStatusLabel } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/StateMessages";
 import { formatDate } from "@/lib/format";
 
 export function TicketsPage() {
+  const { t } = useTranslation();
+  const labelOf = useStatusLabel();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["tickets"], queryFn: Tickets.list });
 
@@ -24,49 +27,60 @@ export function TicketsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">IT Operation Tickets</h1>
-        <p className="text-sm text-ms-muted">
-          Severity / SLA 監控。Workflow 自動建立的 ticket 也會出現在這裡。
-        </p>
+        <h1 className="text-2xl font-semibold">{t("tickets.title")}</h1>
+        <p className="text-sm text-ms-muted">{t("tickets.subtitle")}</p>
       </div>
       <Card>
-        <CardHeader title="Tickets" subtitle={`${q.data?.length ?? 0} tickets`} />
+        <CardHeader
+          title={t("tickets.table.title")}
+          subtitle={t("tickets.table.count", { count: q.data?.length ?? 0 })}
+        />
         <CardBody className="p-0">
           <table className="w-full text-sm">
             <thead className="text-xs text-ms-muted bg-white/[0.02] border-b border-ms-line">
               <tr>
-                <th className="text-left px-4 py-2 font-medium">Ticket</th>
-                <th className="text-left px-4 py-2 font-medium">Title</th>
-                <th className="text-left px-4 py-2 font-medium">Severity</th>
-                <th className="text-left px-4 py-2 font-medium">Status</th>
-                <th className="text-left px-4 py-2 font-medium">SLA</th>
-                <th className="text-left px-4 py-2 font-medium">Due</th>
-                <th className="text-right px-4 py-2 font-medium">Action</th>
+                <th className="text-left px-4 py-2 font-medium">{t("tickets.table.ticket")}</th>
+                <th className="text-left px-4 py-2 font-medium">{t("tickets.table.titleCol")}</th>
+                <th className="text-left px-4 py-2 font-medium">{t("tickets.table.severity")}</th>
+                <th className="text-left px-4 py-2 font-medium">{t("tickets.table.status")}</th>
+                <th className="text-left px-4 py-2 font-medium">{t("tickets.table.sla")}</th>
+                <th className="text-left px-4 py-2 font-medium">{t("tickets.table.due")}</th>
+                <th className="text-right px-4 py-2 font-medium">{t("tickets.table.actions")}</th>
               </tr>
             </thead>
             <tbody>
-              {(q.data ?? []).map((t) => (
-                <tr key={t.id} className="border-b border-ms-line/60">
-                  <td className="px-4 py-2 font-mono text-xs">{t.ticket_number}</td>
+              {(q.data ?? []).map((tk) => (
+                <tr key={tk.id} className="border-b border-ms-line/60">
+                  <td className="px-4 py-2 font-mono text-xs">{tk.ticket_number}</td>
                   <td className="px-4 py-2">
-                    <div>{t.title}</div>
-                    {t.description && <div className="text-xs text-ms-muted">{t.description}</div>}
+                    <div>{tk.title}</div>
+                    {tk.description && <div className="text-xs text-ms-muted">{tk.description}</div>}
                   </td>
-                  <td className="px-4 py-2"><Badge tone={severityTone(t.severity)}>{t.severity.toUpperCase()}</Badge></td>
-                  <td className="px-4 py-2"><Badge tone={statusTone(t.status)}>{t.status}</Badge></td>
-                  <td className="px-4 py-2"><Badge tone={statusTone(t.sla_status)}>{t.sla_status.replace("_", " ")}</Badge></td>
-                  <td className="px-4 py-2 text-ms-muted">{formatDate(t.sla_due_at)}</td>
+                  <td className="px-4 py-2">
+                    <Badge tone={severityTone(tk.severity)}>{labelOf(tk.severity)}</Badge>
+                  </td>
+                  <td className="px-4 py-2">
+                    <Badge tone={statusTone(tk.status)}>{labelOf(tk.status)}</Badge>
+                  </td>
+                  <td className="px-4 py-2">
+                    <Badge tone={statusTone(tk.sla_status)}>{labelOf(tk.sla_status)}</Badge>
+                  </td>
+                  <td className="px-4 py-2 text-ms-muted">{formatDate(tk.sla_due_at)}</td>
                   <td className="px-4 py-2 text-right">
-                    {t.status !== "resolved" && t.status !== "closed" && (
-                      <Button variant="primary" onClick={() => resolve.mutate(t.id)} disabled={resolve.isPending}>
-                        Resolve
+                    {tk.status !== "resolved" && tk.status !== "closed" && (
+                      <Button variant="primary" onClick={() => resolve.mutate(tk.id)} disabled={resolve.isPending}>
+                        {t("tickets.table.resolveBtn")}
                       </Button>
                     )}
                   </td>
                 </tr>
               ))}
               {(q.data ?? []).length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-ms-muted">No open tickets.</td></tr>
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-ms-muted">
+                    {t("tickets.table.empty")}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

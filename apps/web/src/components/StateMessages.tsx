@@ -1,19 +1,22 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
-export function LoadingState({ label = "Loading…" }: { label?: string }) {
+export function LoadingState({ label }: { label?: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 text-ms-muted text-sm">
       <span className="inline-block h-3 w-3 rounded-full bg-ms-blue animate-pulse" />
-      {label}
+      {label ?? t("common.loading")}
     </div>
   );
 }
 
 export function ErrorState({ error }: { error: unknown }) {
+  const { t } = useTranslation();
   const message = error instanceof Error ? error.message : String(error);
   return (
     <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-      <div className="font-semibold mb-1">Something went wrong</div>
+      <div className="font-semibold mb-1">{t("common.errorTitle")}</div>
       <div className="opacity-80 break-all">{message}</div>
     </div>
   );
