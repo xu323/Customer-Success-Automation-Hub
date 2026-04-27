@@ -4,7 +4,7 @@ version: "3.9"
 # Customer Success Automation Hub - Run from GHCR
 # ------------------------------------------------------------
 # 拉取 GitHub Container Registry 上預先建好的 image 並啟動。
-# 不需要本機 build，適合給面試官或客戶快速 demo。
+# 不需要本機 build，適合客戶或團隊成員快速啟動 demo 環境。
 #
 #   docker compose -f docker-compose.ghcr.yml pull
 #   docker compose -f docker-compose.ghcr.yml up -d

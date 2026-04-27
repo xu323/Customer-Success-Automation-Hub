@@ -101,7 +101,7 @@ jobs:
             "docs/security-notes.md"
             "docs/api.md"
             "docs/workflow-engine.md"
-            "docs/interview-guide.md"
+            "docs/project-guide.md"
           )
           missing=0
           for f in "${required[@]}"; do

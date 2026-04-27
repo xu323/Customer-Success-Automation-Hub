@@ -1,7 +1,7 @@
 # Security & IT Operation 設計備註
 
-> 這份文件用來向面試官展示我有「Security IT / IT Operation」的思維，
-> 同時記錄專案目前實作與未來上線需要補的安全控制。
+> 這份文件記錄系統在 Security IT / IT Operation 面向的設計考量，
+> 以及目前實作與未來上線需要補的安全控制。
 
 ## 1. 已落實的最佳實務
 
@@ -19,7 +19,7 @@
 
 ## 2. 已知限制（demo 模式刻意保留）
 
-- 沒有使用者認證 / RBAC：作品集 demo 用，本機環境可單機跑。
+- 沒有使用者認證 / RBAC：demo 配置，本機環境可單機跑。
 - BPM approver 只比對字串：`approve_request` 用 `step.approver != body.approver` 防誤按，
   正式版需綁 Entra ID UPN。
 - SQLite 預設無加密；Postgres docker compose 用明碼密碼（demo 用）。

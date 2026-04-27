@@ -10,7 +10,7 @@ description: Research and summarise official Microsoft documentation for Dynamic
 - 新增與 Dynamics 365 Sales、Customer Service、Dataverse 相關的資料表或欄位。
 - 變更 Business Central 同步欄位、API endpoint 或資料 mapping。
 - 設計新的 Power Automate / cloud flow / approval flow 流程。
-- 撰寫面試講稿，需要引用官方術語或 best practice。
+- 撰寫客戶或內部技術文件，需要引用官方術語或 best practice。
 
 ## 工作步驟
 1. 從專案 `docs/research-notes.md` 讀取既有研究筆記，避免重工。

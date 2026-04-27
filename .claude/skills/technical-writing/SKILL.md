@@ -7,7 +7,7 @@ description: Author or update Traditional Chinese documentation for this Microso
 
 ## 何時使用
 - 新功能完成、需要更新 README / 使用方法。
-- 客戶 / 面試官需要架構說明。
+- 客戶或新加入者需要架構說明。
 - 新增資料模型或 API，需要在 docs 反映。
 
 ## 工作步驟
@@ -20,7 +20,7 @@ description: Author or update Traditional Chinese documentation for this Microso
    - **docs/security-notes.md**：列出風險 + 建議。
    - **docs/api.md**：每個 endpoint 一行 + 範例 payload。
    - **docs/workflow-engine.md**：trigger / condition / action 表格。
-   - **docs/interview-guide.md**：30 秒、3 分鐘、深度問答三段式。
+   - **docs/project-guide.md**：一段話 → 操作導覽 → 設計決策 FAQ 三層。
 3. 所有命令以 PowerShell 為主，不用 `&&` 連接（用 `;` 或多行）。
 4. 路徑使用相對路徑且採用 forward slash（除非是 PowerShell 指令）。
 

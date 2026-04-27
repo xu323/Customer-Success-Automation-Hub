@@ -1,6 +1,6 @@
 # Customer Success Automation Hub
 
-> 一個面向 **Microsoft Partner / MSP / Microsoft Solution** 場景的整合作品集專案。
+> 面向 **Microsoft Partner / MSP / Microsoft Solution** 場景的企業流程整合系統。
 > 模擬 Dynamics 365 CRM、Business Central、Power Automate、BPM、IT Operation
 > 與 AI Assistant 的端到端 Customer Success 平台。
 
@@ -9,19 +9,19 @@
 
 ---
 
-## 為什麼建這個專案
+## 系統設計目標
 
-我正在應徵 **系統開發工程師 - Dynamics 365 Business Central**。為了證明我能：
+本系統示範 **Microsoft Business Application** 場景下的整合平台設計，
+涵蓋以下核心能力：
 
-- 理解 **Microsoft Business Application** 的核心場景
-  （Dynamics 365 Sales / Customer Service、Business Central、Power Automate、Dataverse）
-- 設計企業級 **API + 流程引擎 + 前端 Dashboard** 的端到端架構
-- 處理 **CRM Lead-to-Cash、Customer Onboarding、BPM 簽核、Business Central 同步**
-- 寫得出讓**面試官、PM、客戶都看得懂的文件**
+- 對齊 Dynamics 365 Sales / Customer Service、Business Central、Power Automate、Dataverse 的概念
+- 端到端架構：**REST API + 流程引擎 + 前端 Dashboard**
+- 業務流程：**CRM Lead-to-Cash、Customer Onboarding、BPM 簽核、Business Central 同步**
+- 完整文件化的設計決策、API 介面與部署方式
 
-我用 mock connector 完整實作這個 Hub，
-讓沒有真實 Dynamics 365 / Business Central tenant 的人也能在本機完整跑起來。
-每個 mock 模組都註明了未來如何切換成真實服務。
+所有外部 Microsoft 服務以 mock connector 實作，因此沒有真實 Dynamics 365 /
+Business Central tenant 也能在本機完整啟動。每個 mock 模組都註明了未來如何
+切換成真實服務。
 
 ---
 
@@ -151,7 +151,9 @@ docker run -d -p 5173:5173 -e VITE_API_BASE_URL=https://api.your-domain.com `
 
 ---
 
-## Demo Script（面試展示順序）
+## Demo 操作流程
+
+完整端到端體驗的建議順序：
 
 1. **Executive Dashboard**：6 個 KPI 卡 + 最近 audit 事件。
 2. **CRM Pipeline**：建一筆 Lead → Qualify → 看 Opportunity 出現 → Mark Won。
@@ -160,7 +162,7 @@ docker run -d -p 5173:5173 -e VITE_API_BASE_URL=https://api.your-domain.com `
 5. **Automation Flows**：手動觸發 `Won opportunity → Onboarding project` 看 timeline。
 6. **IT Operation**：SLA 告警 → resolve。
 7. **AI Assistant**：customer summary + meeting notes to tasks。
-8. **Audit Logs**：證明每一步都有事件紀錄（compliance / SOC2 視角）。
+8. **Audit Logs**：每一步都有事件紀錄（compliance / SOC2 視角）。
 
 ---
 
@@ -168,16 +170,16 @@ docker run -d -p 5173:5173 -e VITE_API_BASE_URL=https://api.your-domain.com `
 
 | 檔案 | 用途 |
 |------|------|
-| [使用方法.md](使用方法.md) | **新手必讀**。從零安裝、操作、面試介紹一條龍 |
+| [使用方法.md](使用方法.md) | **新手必讀**。從零安裝、啟動、操作教學 |
 | [docs/architecture.md](docs/architecture.md) | 系統架構、資料流、整合點 |
 | [docs/research-notes.md](docs/research-notes.md) | Microsoft 產品研究筆記 |
 | [docs/api.md](docs/api.md) | REST API 一覽 + 範例 payload |
 | [docs/workflow-engine.md](docs/workflow-engine.md) | JSON workflow DSL 與所有 action |
 | [docs/security-notes.md](docs/security-notes.md) | Security IT / IT Operation 視角的設計 |
-| [docs/interview-guide.md](docs/interview-guide.md) | 30 秒 / 3 分鐘 / 深度問答三段式講稿 |
+| [docs/project-guide.md](docs/project-guide.md) | 專案導覽 + 設計決策 FAQ |
 
 ---
 
 ## License
 
-MIT — 純作品集用途。Microsoft 商標 / 產品名稱屬 Microsoft 所有。
+MIT。Microsoft 商標 / 產品名稱屬 Microsoft 所有。

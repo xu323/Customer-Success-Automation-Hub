@@ -6,8 +6,7 @@ between a mock implementation (deterministic, offline) and a real
 implementation (Dataverse Web API + OAuth client credentials).
 
 This file documents the real-world endpoints in comments so a future
-contributor (or you, during the interview) can point at exactly what would
-change to "go live".
+contributor can point at exactly what would change to "go live".
 """
 from __future__ import annotations
 

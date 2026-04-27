@@ -1,6 +1,6 @@
 # 系統架構（Solution Architecture）
 
-> 本文件給 PM、面試官與後續維運接手者看。所有圖以 ASCII 為主，
+> 本文件給 PM 與後續維運接手者看。所有圖以 ASCII 為主，
 > 方便不需任何畫圖工具就能讀懂。
 
 ## 1. 高階組件圖
@@ -108,7 +108,7 @@ runs.finished_at
 | React Query | redux | server state cache、自動 invalidation 不用手動寫 dispatch |
 | Tailwind | Material UI | 視覺接近 Microsoft Partner 設計，bundle 體積小 |
 | JSON workflow DSL | 程式碼寫 hard-coded rule | 對齊 Power Automate 的「flow as data」精神 |
-| Mock connectors | 直接接 Dataverse | 面試官可離線 demo、避免外洩 tenant secret |
+| Mock connectors | 直接接 Dataverse | 可完全離線 demo、避免外洩 tenant secret |
 
 ## 5. Sequence diagram - 完整 demo 路徑
 
