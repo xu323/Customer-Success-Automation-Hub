@@ -5,6 +5,7 @@
 > 與 AI Assistant 的端到端 Customer Success 平台。
 
 [![CI](https://github.com/xu323/Customer-Success-Automation-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/xu323/Customer-Success-Automation-Hub/actions/workflows/ci.yml)
+[![CD](https://github.com/xu323/Customer-Success-Automation-Hub/actions/workflows/cd.yml/badge.svg)](https://github.com/xu323/Customer-Success-Automation-Hub/actions/workflows/cd.yml)
 
 ---
 
@@ -104,7 +105,7 @@ npm run dev
 
 ---
 
-## 一鍵 Docker
+## 一鍵 Docker（本機 build）
 
 ```powershell
 docker compose up --build
@@ -115,6 +116,38 @@ docker compose up --build
 - PostgreSQL 16
 - FastAPI Backend (8000)
 - React Frontend (5173)
+
+---
+
+## 從 GHCR 拉取已發布 image（CD 自動產生）
+
+每一次推到 `main` 或打 `v*.*.*` tag，
+[CD workflow](.github/workflows/cd.yml) 都會把兩個 image 推到 GitHub Container Registry：
+
+| Image | Pull command |
+|-------|--------------|
+| Backend (FastAPI) | `docker pull ghcr.io/xu323/customer-success-automation-hub/api:latest` |
+| Frontend (React)  | `docker pull ghcr.io/xu323/customer-success-automation-hub/web:latest` |
+
+支援的 tag：`latest`、`main`、`sha-<short>`、語意版本 `1`、`1.2`、`1.2.3`。
+
+一鍵拉起完整環境（不用本機 build、不用 git clone 完整專案）：
+
+```powershell
+# 取得 docker-compose.ghcr.yml 後執行：
+docker compose -f docker-compose.ghcr.yml pull
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+Web image 採 **runtime config injection**：build 時把 `VITE_API_BASE_URL` 烘成 placeholder，
+容器啟動時 `docker-entrypoint.sh` 用環境變數值即時替換，所以**同一個 image 可部到任何環境**：
+
+```powershell
+docker run -d -p 5173:5173 -e VITE_API_BASE_URL=https://api.your-domain.com `
+  ghcr.io/xu323/customer-success-automation-hub/web:latest
+```
+
+> 第一次推送後，請到 <https://github.com/xu323?tab=packages> 把兩個 package 設為 Public（預設 Private）。
 
 ---
 

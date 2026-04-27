@@ -1,0 +1,7 @@
+# Ensure shell scripts are stored with LF line endings so they execute
+# correctly inside Linux containers, even when authored on Windows.
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+
+# Keep PowerShell scripts as CRLF (Windows-native).
+*.ps1 text eol=crlf
