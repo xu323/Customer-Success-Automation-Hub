@@ -13,6 +13,7 @@ import { TrendIndicator } from "@/components/TrendIndicator";
 import { Sparkline } from "@/components/Sparkline";
 import { Avatar } from "@/components/Avatar";
 import { Skeleton, SkeletonRow } from "@/components/Skeleton";
+import { Modal } from "@/components/Modal";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { mockTrend } from "@/lib/timeseries";
 import type { OpportunityStage } from "@/types";
@@ -37,6 +38,7 @@ export function CRMPage() {
   const [stageFilter, setStageFilter] = useState<OpportunityStage | "all">("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [newOppOpen, setNewOppOpen] = useState(false);
 
   const leadsQ = useQuery({ queryKey: ["leads"], queryFn: CRM.listLeads });
   const oppsQ = useQuery({ queryKey: ["opportunities"], queryFn: CRM.listOpportunities });
@@ -105,11 +107,7 @@ export function CRMPage() {
               lastUpdated={lastUpdated}
               onRefresh={handleRefresh}
             />
-            <Button
-              variant="primary"
-              disabled
-              title={t("common.notImplemented")}
-            >
+            <Button variant="primary" onClick={() => setNewOppOpen(true)}>
               + {t("crm.toolbar.newOpp")}
             </Button>
           </>
@@ -189,6 +187,16 @@ export function CRMPage() {
       {!oppsQ.isLoading && view === "forecast" && (
         <ForecastView opportunities={oppsQ.data ?? []} range={range} />
       )}
+
+      {/* New opportunity dialog */}
+      <NewOpportunityDialog
+        open={newOppOpen}
+        onClose={() => setNewOppOpen(false)}
+        onCreated={() => {
+          qc.invalidateQueries({ queryKey: ["opportunities"] });
+          qc.invalidateQueries({ queryKey: ["dashboard"] });
+        }}
+      />
 
       {/* Unqualified leads panel — collapsed at bottom for context */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -280,6 +288,187 @@ export function CRMPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// New opportunity dialog
+// ----------------------------------------------------------------------
+function NewOpportunityDialog({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { t } = useTranslation();
+  const labelOf = useStatusLabel();
+  const [name, setName] = useState("");
+  const [stage, setStage] = useState<OpportunityStage>("qualification");
+  const [amount, setAmount] = useState("100000");
+  const [probability, setProbability] = useState("30");
+  const [closeDate, setCloseDate] = useState("");
+  const [owner, setOwner] = useState("sales@partner.com");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const create = useMutation({
+    mutationFn: () =>
+      CRM.createOpportunity({
+        name: name.trim(),
+        stage,
+        amount: amount ? Number(amount) : 0,
+        probability: probability ? Number(probability) / 100 : 0.1,
+        expected_close_date: closeDate ? new Date(closeDate).toISOString() : null,
+        owner: owner.trim() || null,
+        description: description.trim() || null,
+      }),
+    onSuccess: () => {
+      onCreated();
+      // reset
+      setName("");
+      setAmount("100000");
+      setProbability("30");
+      setCloseDate("");
+      setOwner("sales@partner.com");
+      setDescription("");
+      setError(null);
+      onClose();
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError(t("crm.newOppDialog.validation"));
+      return;
+    }
+    setError(null);
+    create.mutate();
+  };
+
+  // sensible default close date = today + 45 days
+  const defaultCloseDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 45);
+    return d.toISOString().slice(0, 10);
+  }, []);
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t("crm.newOppDialog.title")}
+      subtitle={t("crm.newOppDialog.subtitle")}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} type="button">
+            {t("crm.newOppDialog.cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={create.isPending}
+            type="button"
+          >
+            {create.isPending ? t("crm.newOppDialog.creating") : t("crm.newOppDialog.create")}
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <Field label={t("crm.newOppDialog.fieldName")}>
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("crm.newOppDialog.fieldNamePh")}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t("crm.newOppDialog.fieldStage")}>
+            <select
+              value={stage}
+              onChange={(e) => setStage(e.target.value as OpportunityStage)}
+              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            >
+              {STAGES.filter((s) => s !== "lost").map((s) => (
+                <option key={s} value={s}>
+                  {labelOf(s)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t("crm.newOppDialog.fieldProbability")}>
+            <select
+              value={probability}
+              onChange={(e) => setProbability(e.target.value)}
+              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            >
+              {["10", "30", "60", "75", "90", "100"].map((v) => (
+                <option key={v} value={v}>
+                  {v}%
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t("crm.newOppDialog.fieldAmount")}>
+            <input
+              type="number"
+              min={0}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            />
+          </Field>
+          <Field label={t("crm.newOppDialog.fieldCloseDate")}>
+            <input
+              type="date"
+              value={closeDate || defaultCloseDate}
+              onChange={(e) => setCloseDate(e.target.value)}
+              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            />
+          </Field>
+        </div>
+        <Field label={t("crm.newOppDialog.fieldOwner")}>
+          <input
+            value={owner}
+            onChange={(e) => setOwner(e.target.value)}
+            placeholder={t("crm.newOppDialog.fieldOwnerPh")}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          />
+        </Field>
+        <Field label={t("crm.newOppDialog.fieldDescription")}>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t("crm.newOppDialog.fieldDescriptionPh")}
+            rows={3}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60 resize-none"
+          />
+        </Field>
+        {error && (
+          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
+            {error}
+          </div>
+        )}
+      </form>
+    </Modal>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-xs text-ms-muted mb-1">{label}</span>
+      {children}
+    </label>
   );
 }
 

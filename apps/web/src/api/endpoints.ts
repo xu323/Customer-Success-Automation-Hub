@@ -23,6 +23,16 @@ export const CRM = {
   createLead: (body: Partial<Lead>) => api.post<Lead>("/api/crm/leads", body),
   qualifyLead: (id: number) => api.post<Opportunity>(`/api/crm/leads/${id}/qualify`),
   listOpportunities: () => api.get<Opportunity[]>("/api/crm/opportunities"),
+  createOpportunity: (body: {
+    name: string;
+    account_id?: number | null;
+    amount?: number;
+    probability?: number;
+    expected_close_date?: string | null;
+    owner?: string | null;
+    description?: string | null;
+    stage?: string;
+  }) => api.post<Opportunity>("/api/crm/opportunities", body),
   markWon: (id: number) => api.post<Opportunity>(`/api/crm/opportunities/${id}/mark-won`),
   listQuotes: () => api.get<Quote[]>("/api/crm/quotes"),
   createQuote: (body: { opportunity_id: number; total_amount: number; currency?: string; line_items?: any[] }) =>
