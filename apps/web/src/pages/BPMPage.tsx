@@ -11,6 +11,7 @@ import { RefreshButton } from "@/components/RefreshButton";
 import { Tabs, type TabSpec } from "@/components/Tabs";
 import { Avatar } from "@/components/Avatar";
 import { SkeletonRow } from "@/components/Skeleton";
+import { Modal } from "@/components/Modal";
 import { formatCurrency, formatRelative } from "@/lib/format";
 import type { BPMRequest, BPMRequestType } from "@/types";
 
@@ -91,6 +92,7 @@ export function BPMPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<BPMRequestType | "all">("all");
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [newOpen, setNewOpen] = useState(false);
 
   const requestsQ = useQuery({ queryKey: ["bpm"], queryFn: BPM.listRequests });
 
@@ -203,15 +205,17 @@ export function BPMPage() {
                 {t("bpm.toolbar.bulkApprove", { count: selected.size })}
               </Button>
             )}
-            <Button
-              variant="primary"
-              disabled
-              title={t("common.notImplemented")}
-            >
+            <Button variant="primary" onClick={() => setNewOpen(true)}>
               + {t("bpm.toolbar.newRequest")}
             </Button>
           </>
         }
+      />
+
+      <NewBPMRequestDialog
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onCreated={invalidate}
       />
 
       <Card>
@@ -393,6 +397,164 @@ export function BPMPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// New BPM request dialog
+// ----------------------------------------------------------------------
+function NewBPMRequestDialog({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { t } = useTranslation();
+  const [type, setType] = useState<BPMRequestType>("VendorPayment");
+  const [title, setTitle] = useState("");
+  const [requester, setRequester] = useState("finance.user@partner.com");
+  const [amount, setAmount] = useState("12500");
+  const [approvers, setApprovers] = useState("manager@partner.com, finance@partner.com");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const create = useMutation({
+    mutationFn: () =>
+      BPM.createRequest({
+        request_type: type,
+        title: title.trim(),
+        requester: requester.trim(),
+        amount: amount ? Number(amount) : null,
+        currency: "USD",
+        payload: notes.trim() ? { notes: notes.trim() } : null,
+        approvers: approvers
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      }),
+    onSuccess: () => {
+      onCreated();
+      setTitle("");
+      setAmount("12500");
+      setNotes("");
+      setError(null);
+      onClose();
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) {
+      setError(t("bpm.newRequestDialog.validationTitle"));
+      return;
+    }
+    const list = approvers.split(",").map((s) => s.trim()).filter(Boolean);
+    if (list.length === 0) {
+      setError(t("bpm.newRequestDialog.validationApprovers"));
+      return;
+    }
+    setError(null);
+    create.mutate();
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t("bpm.newRequestDialog.title")}
+      subtitle={t("bpm.newRequestDialog.subtitle")}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} type="button">
+            {t("common.cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={create.isPending}
+            type="button"
+          >
+            {create.isPending ? t("bpm.create.submitting") : t("bpm.create.submit")}
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <DialogField label={t("bpm.newRequestDialog.fieldType")}>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as BPMRequestType)}
+              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            >
+              <option value="VendorPayment">{t("bpm.types.VendorPayment")}</option>
+              <option value="EmployeePayment">{t("bpm.types.EmployeePayment")}</option>
+              <option value="TravelRequest">{t("bpm.types.TravelRequest")}</option>
+            </select>
+          </DialogField>
+          <DialogField label={t("bpm.newRequestDialog.fieldAmount")}>
+            <input
+              type="number"
+              min={0}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            />
+          </DialogField>
+        </div>
+        <DialogField label={t("bpm.newRequestDialog.fieldTitle")}>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("bpm.newRequestDialog.fieldTitlePh")}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          />
+        </DialogField>
+        <DialogField label={t("bpm.newRequestDialog.fieldRequester")}>
+          <input
+            value={requester}
+            onChange={(e) => setRequester(e.target.value)}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          />
+        </DialogField>
+        <DialogField label={t("bpm.newRequestDialog.fieldApprovers")}>
+          <input
+            value={approvers}
+            onChange={(e) => setApprovers(e.target.value)}
+            placeholder={t("bpm.newRequestDialog.fieldApproversPh")}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          />
+        </DialogField>
+        <DialogField label={t("bpm.newRequestDialog.fieldNotes")}>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={t("bpm.newRequestDialog.fieldNotesPh")}
+            rows={3}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60 resize-none"
+          />
+        </DialogField>
+        {error && (
+          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
+            {error}
+          </div>
+        )}
+      </form>
+    </Modal>
+  );
+}
+
+function DialogField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-xs text-ms-muted mb-1">{label}</span>
+      {children}
+    </label>
   );
 }
 

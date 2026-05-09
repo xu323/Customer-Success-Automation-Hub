@@ -6,8 +6,36 @@ import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ErrorState, LoadingState } from "@/components/StateMessages";
+import { Modal } from "@/components/Modal";
 import { formatDate, formatRelative } from "@/lib/format";
 import type { WorkflowDefinition, WorkflowRun } from "@/types";
+
+// Trigger events the engine understands (keep in sync with workflow_engine.py).
+const TRIGGER_EVENTS = [
+  "manual",
+  "opportunity.won",
+  "bpm.request.synced_to_bc",
+  "onboarding.task.overdue",
+] as const;
+
+// Action types and their default param payload, mirroring the backend
+// ACTION_REGISTRY in workflow_engine.py.
+const ACTION_DEFAULTS: Record<string, Record<string, unknown>> = {
+  create_onboarding_project: { target_days: 60 },
+  create_risk_alert: { level: "medium", title: "Auto-detected risk" },
+  create_ticket: { severity: "sev3", title: "Auto-generated incident", sla_hours: 24 },
+  sync_to_business_central: { request_type: "VendorPayment" },
+  send_notification: {
+    channel: "email",
+    to: "delivery@partner.com",
+    subject: "Workflow notification",
+  },
+  call_power_automate_flow: { flow_name: "Generic flow" },
+  http_post: { url: "https://api.example.com/webhook" },
+};
+const ACTION_TYPES = Object.keys(ACTION_DEFAULTS);
+
+const CONDITION_OPS = ["==", "!=", ">", ">=", "<", "<=", "in", "contains", "exists"] as const;
 
 // Map seeded English workflow names to slug keys for i18n title/description
 // lookup. User-created workflows fall through to the raw API name.
@@ -229,6 +257,7 @@ export function AutomationPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "enabled" | "disabled">("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
 
   const run = useMutation({
     mutationFn: (id: number) =>
@@ -353,8 +382,7 @@ export function AutomationPage() {
           </div>
           <Button
             variant="primary"
-            disabled
-            title={t("automation.menu.demoOnly")}
+            onClick={() => setNewOpen(true)}
             className="shrink-0"
           >
             + {t("automation.toolbar.newWorkflow")}
@@ -518,7 +546,349 @@ export function AutomationPage() {
           ))}
         </CardBody>
       </Card>
+
+      <NewWorkflowDialog
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onCreated={() => qc.invalidateQueries({ queryKey: ["workflows"] })}
+      />
     </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// New Workflow dialog
+// ----------------------------------------------------------------------
+interface DraftCondition {
+  path: string;
+  op: string;
+  value: string;
+}
+interface DraftAction {
+  type: string;
+}
+
+function NewWorkflowDialog({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { t } = useTranslation();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [trigger, setTrigger] = useState<string>("opportunity.won");
+  const [enabled, setEnabled] = useState(true);
+  const [conditions, setConditions] = useState<DraftCondition[]>([]);
+  const [actions, setActions] = useState<DraftAction[]>([{ type: "send_notification" }]);
+  const [error, setError] = useState<string | null>(null);
+
+  const create = useMutation({
+    mutationFn: () => {
+      // Coerce condition values: try number, fall back to string.
+      const conds = conditions.map((c) => {
+        let value: unknown = c.value;
+        const asNum = Number(c.value);
+        if (c.value !== "" && !Number.isNaN(asNum)) value = asNum;
+        return { path: c.path, op: c.op, value };
+      });
+      return Automation.createWorkflow({
+        name: name.trim(),
+        description: description.trim() || null,
+        trigger:
+          trigger === "manual"
+            ? { type: "manual" }
+            : { type: "event", event: trigger },
+        conditions: conds,
+        actions: actions.map((a) => ({
+          type: a.type,
+          params: ACTION_DEFAULTS[a.type] ?? {},
+        })),
+        enabled,
+      });
+    },
+    onSuccess: () => {
+      onCreated();
+      // reset
+      setName("");
+      setDescription("");
+      setTrigger("opportunity.won");
+      setEnabled(true);
+      setConditions([]);
+      setActions([{ type: "send_notification" }]);
+      setError(null);
+      onClose();
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError(t("automation.newWorkflowDialog.validationName"));
+      return;
+    }
+    if (actions.length === 0) {
+      setError(t("automation.newWorkflowDialog.validationActions"));
+      return;
+    }
+    setError(null);
+    create.mutate();
+  };
+
+  const moveAction = (idx: number, dir: -1 | 1) => {
+    setActions((prev) => {
+      const next = [...prev];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t("automation.newWorkflowDialog.title")}
+      subtitle={t("automation.newWorkflowDialog.subtitle")}
+      width="max-w-2xl"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} type="button">
+            {t("common.cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={create.isPending}
+            type="button"
+          >
+            {create.isPending ? "…" : t("automation.toolbar.newWorkflow")}
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <WfField label={t("automation.newWorkflowDialog.fieldName")}>
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("automation.newWorkflowDialog.fieldNamePh")}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          />
+        </WfField>
+        <WfField label={t("automation.newWorkflowDialog.fieldDescription")}>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t("automation.newWorkflowDialog.fieldDescriptionPh")}
+            rows={2}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60 resize-none"
+          />
+        </WfField>
+        <WfField label={t("automation.newWorkflowDialog.fieldTrigger")}>
+          <select
+            value={trigger}
+            onChange={(e) => setTrigger(e.target.value)}
+            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+          >
+            {TRIGGER_EVENTS.map((ev) => {
+              const label =
+                ev === "manual"
+                  ? t("automation.events.manual")
+                  : t(`automation.events.${ev.replace(/\./g, "_")}` as const, {
+                      defaultValue: ev,
+                    });
+              return (
+                <option key={ev} value={ev}>
+                  {label} — {ev}
+                </option>
+              );
+            })}
+          </select>
+        </WfField>
+
+        {/* Conditions */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-ms-muted">
+              {t("automation.newWorkflowDialog.sectionConditions")}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setConditions((p) => [...p, { path: "amount", op: ">=", value: "0" }])
+              }
+              className="text-xs text-ms-blue hover:underline"
+            >
+              {t("automation.newWorkflowDialog.addCondition")}
+            </button>
+          </div>
+          <p className="text-[11px] text-ms-muted mb-2">
+            {t("automation.newWorkflowDialog.sectionConditionsHint")}
+          </p>
+          {conditions.length === 0 ? (
+            <div className="text-xs text-ms-muted italic px-3 py-2 border border-dashed border-ms-line rounded">
+              —
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {conditions.map((c, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <input
+                    value={c.path}
+                    onChange={(e) =>
+                      setConditions((prev) =>
+                        prev.map((x, j) => (j === i ? { ...x, path: e.target.value } : x)),
+                      )
+                    }
+                    placeholder={t("automation.newWorkflowDialog.conditionPathPh")}
+                    className="flex-1 bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-ms-blue/60"
+                  />
+                  <select
+                    value={c.op}
+                    onChange={(e) =>
+                      setConditions((prev) =>
+                        prev.map((x, j) => (j === i ? { ...x, op: e.target.value } : x)),
+                      )
+                    }
+                    className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs"
+                  >
+                    {CONDITION_OPS.map((op) => (
+                      <option key={op} value={op}>
+                        {op}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={c.value}
+                    onChange={(e) =>
+                      setConditions((prev) =>
+                        prev.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)),
+                      )
+                    }
+                    placeholder={t("automation.newWorkflowDialog.conditionValuePh")}
+                    className="w-32 bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-ms-blue/60"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setConditions((prev) => prev.filter((_, j) => j !== i))}
+                    title={t("automation.newWorkflowDialog.removeRow")}
+                    className="text-ms-muted hover:text-rose-300 px-2"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-ms-muted">
+              {t("automation.newWorkflowDialog.sectionActions")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActions((p) => [...p, { type: "send_notification" }])}
+              className="text-xs text-ms-blue hover:underline"
+            >
+              {t("automation.newWorkflowDialog.addAction")}
+            </button>
+          </div>
+          <p className="text-[11px] text-ms-muted mb-2">
+            {t("automation.newWorkflowDialog.sectionActionsHint")}
+          </p>
+          {actions.length === 0 ? (
+            <div className="text-xs text-rose-300 italic px-3 py-2 border border-dashed border-rose-500/40 rounded">
+              {t("automation.newWorkflowDialog.validationActions")}
+            </div>
+          ) : (
+            <ol className="space-y-2">
+              {actions.map((a, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="text-xs text-ms-muted w-5 tabular-nums">{i + 1}.</span>
+                  <select
+                    value={a.type}
+                    onChange={(e) =>
+                      setActions((prev) =>
+                        prev.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)),
+                      )
+                    }
+                    className="flex-1 bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-ms-blue/60"
+                  >
+                    {ACTION_TYPES.map((tp) => (
+                      <option key={tp} value={tp}>
+                        {t(`automation.action_types.${tp}` as const, { defaultValue: tp })} ·{" "}
+                        {tp}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    onClick={() => moveAction(i, -1)}
+                    title={t("automation.newWorkflowDialog.moveUp")}
+                    className="text-ms-muted hover:text-white px-1.5 disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === actions.length - 1}
+                    onClick={() => moveAction(i, 1)}
+                    title={t("automation.newWorkflowDialog.moveDown")}
+                    className="text-ms-muted hover:text-white px-1.5 disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActions((prev) => prev.filter((_, j) => j !== i))}
+                    title={t("automation.newWorkflowDialog.removeRow")}
+                    className="text-ms-muted hover:text-rose-300 px-2"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+
+        <label className="flex items-center gap-2 text-xs text-ms-muted">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="accent-ms-blue"
+          />
+          {t("automation.newWorkflowDialog.fieldEnabled")}
+        </label>
+
+        {error && (
+          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
+            {error}
+          </div>
+        )}
+      </form>
+    </Modal>
+  );
+}
+
+function WfField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-xs text-ms-muted mb-1">{label}</span>
+      {children}
+    </label>
   );
 }
 
