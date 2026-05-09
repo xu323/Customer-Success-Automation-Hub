@@ -2,9 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================
+   Fluent 2 / D365 BC light theme
+   ========================================================= */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  /* Density token (default 32 px). Switched at runtime via the
+     density toggle, which sets <html data-density="..."> and rewrites
+     this var. */
+  --row-h: 32px;
+
+  /* Focus ring — 2px brand on a 2px white halo. */
+  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0078D4;
 }
+
+html[data-density="compact"] { --row-h: 28px; }
+html[data-density="comfy"]   { --row-h: 40px; }
 
 html, body, #root {
   height: 100%;
@@ -12,14 +25,95 @@ html, body, #root {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(0,120,212,0.18), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgba(99, 102, 241, 0.10), transparent 60%),
-    #0b1226;
-  color: #e2e8f0;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #FAF9F8; /* neutral-10 */
+  color: #201F1E;            /* neutral-190 */
+  font-family:
+    "Segoe UI Variable Display",
+    "Segoe UI Variable",
+    "Segoe UI",
+    "Microsoft JhengHei UI",
+    "Yu Gothic UI",
+    system-ui,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.scrollbar-soft::-webkit-scrollbar { width: 8px; height: 8px; }
-.scrollbar-soft::-webkit-scrollbar-thumb { background: #1f2a44; border-radius: 999px; }
-.scrollbar-soft::-webkit-scrollbar-thumb:hover { background: #334155; }
+/* =========================================================
+   Scrollbar (subtle, light)
+   ========================================================= */
+.scrollbar-soft::-webkit-scrollbar         { width: 10px; height: 10px; }
+.scrollbar-soft::-webkit-scrollbar-thumb   { background: #C8C6C4; border-radius: 4px; }
+.scrollbar-soft::-webkit-scrollbar-thumb:hover { background: #A19F9D; }
+.scrollbar-soft::-webkit-scrollbar-track   { background: transparent; }
+
+/* =========================================================
+   Form / focus baseline
+   ========================================================= */
+:where(input, select, textarea, button):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: #0078D4;
+}
+
+/* =========================================================
+   Reusable component classes
+   ========================================================= */
+@layer components {
+  /* Buttons --------------------------------------------------- */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded text-sm font-semibold border transition-colors whitespace-nowrap;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    min-height: 32px;
+  }
+  .btn-primary {
+    @apply btn-base bg-brand-500 border-brand-500 text-white;
+    @apply hover:bg-brand-600 hover:border-brand-600;
+    @apply active:bg-brand-700 active:border-brand-700;
+  }
+  .btn-secondary {
+    @apply btn-base bg-white border-neutral-40 text-neutral-190;
+    @apply hover:bg-neutral-20;
+    @apply active:bg-neutral-30;
+  }
+  .btn-subtle {
+    @apply btn-base bg-transparent border-transparent text-neutral-160;
+    @apply hover:bg-neutral-20 hover:text-neutral-190;
+  }
+  .btn-success {
+    @apply btn-base bg-success border-success text-white hover:opacity-90;
+  }
+  .btn-danger {
+    @apply btn-base bg-danger border-danger text-white hover:opacity-90;
+  }
+
+  /* Form controls -------------------------------------------- */
+  .input-base {
+    @apply w-full bg-white border border-neutral-40 rounded text-sm text-neutral-190 placeholder:text-neutral-90;
+    @apply focus:outline-none focus:border-brand-500;
+    padding: 6px 8px;
+    min-height: 32px;
+  }
+
+  .label-base {
+    @apply block text-xs font-semibold text-neutral-160 mb-1;
+  }
+  .label-required::after {
+    content: " *";
+    color: #A4262C;
+  }
+
+  .field-error {
+    @apply mt-1 text-xs text-danger flex items-center gap-1.5;
+  }
+
+  /* Cards / surfaces ---------------------------------------- */
+  .card-surface {
+    @apply bg-white border border-neutral-40 rounded shadow-card;
+  }
+
+  /* Table density (driven by --row-h) ----------------------- */
+  .table-row { height: var(--row-h); }
+}

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { DollarSign, User, Plane } from "lucide-react";
 import { BPM } from "@/api/endpoints";
 import { Card, CardBody } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
@@ -12,12 +14,9 @@ import { Tabs, type TabSpec } from "@/components/Tabs";
 import { Avatar } from "@/components/Avatar";
 import { SkeletonRow } from "@/components/Skeleton";
 import { Modal } from "@/components/Modal";
+import { CURRENT_USER } from "@/lib/currentUser";
 import { formatCurrency, formatRelative } from "@/lib/format";
 import type { BPMRequest, BPMRequestType } from "@/types";
-
-// In a real app this comes from auth. For the demo we hardcode the user.
-const CURRENT_USER = "manager@partner.com";
-const CURRENT_USER_ALT = "finance@partner.com";
 
 type TabKey = "myPending" | "submittedByMe" | "all";
 
@@ -55,7 +54,7 @@ function SLAChip({ req }: { req: BPMRequest }) {
   const { t, i18n } = useTranslation();
   const sla = slaInfo(req);
   if (sla.state === "noDeadline") {
-    return <span className="text-xs text-ms-muted">—</span>;
+    return <span className="text-xs text-neutral-90">—</span>;
   }
   const time = sla.msUntilDue !== null ? formatSlaTime(sla.msUntilDue, i18n.language) : "";
   if (sla.state === "breached") {
@@ -68,18 +67,22 @@ function SLAChip({ req }: { req: BPMRequest }) {
 }
 
 function TypeIcon({ type }: { type: BPMRequestType }) {
-  const map: Record<BPMRequestType, { icon: string; tone: string }> = {
-    VendorPayment: { icon: "$", tone: "bg-emerald-500/20 text-emerald-300" },
-    EmployeePayment: { icon: "👤", tone: "bg-sky-500/20 text-sky-300" },
-    TravelRequest: { icon: "✈", tone: "bg-violet-500/20 text-violet-300" },
+  const map: Record<
+    BPMRequestType,
+    { Icon: typeof DollarSign; tone: string }
+  > = {
+    VendorPayment: { Icon: DollarSign, tone: "bg-success-bg text-success" },
+    EmployeePayment: { Icon: User, tone: "bg-info-bg text-brand-700" },
+    TravelRequest: { Icon: Plane, tone: "bg-brand-100 text-brand-700" },
   };
   const m = map[type];
+  const Icon = m.Icon;
   return (
     <span
-      className={`inline-flex w-7 h-7 rounded-md items-center justify-center text-sm font-bold ${m.tone}`}
+      className={`inline-flex w-7 h-7 rounded items-center justify-center ${m.tone}`}
       aria-hidden
     >
-      {m.icon}
+      <Icon size={14} strokeWidth={1.75} />
     </span>
   );
 }
@@ -101,31 +104,55 @@ export function BPMPage() {
     qc.invalidateQueries({ queryKey: ["dashboard"] });
     qc.invalidateQueries({ queryKey: ["audit"] });
   };
-  const submit = useMutation({ mutationFn: (id: number) => BPM.submit(id), onSuccess: invalidate });
+  const onErr = (e: unknown) =>
+    toast.error(t("common.failedAction", { message: e instanceof Error ? e.message : String(e) }));
+  const submit = useMutation({
+    mutationFn: (id: number) => BPM.submit(id),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("common.updated"));
+    },
+    onError: onErr,
+  });
   const approve = useMutation({
     mutationFn: ({ id, approver }: { id: number; approver: string }) =>
-      BPM.approve(id, approver, "Approved via UI"),
-    onSuccess: invalidate,
+      BPM.approve(id, approver, "Approved"),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("status.Approved"));
+    },
+    onError: onErr,
   });
   const reject = useMutation({
     mutationFn: ({ id, approver }: { id: number; approver: string }) =>
-      BPM.reject(id, approver, "Rejected via UI"),
-    onSuccess: invalidate,
+      BPM.reject(id, approver, "Rejected"),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("status.Rejected"));
+    },
+    onError: onErr,
   });
-  const syncBC = useMutation({ mutationFn: (id: number) => BPM.syncToBC(id), onSuccess: invalidate });
+  const syncBC = useMutation({
+    mutationFn: (id: number) => BPM.syncToBC(id),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("bpm.actions.syncToBC"));
+    },
+    onError: onErr,
+  });
 
-  const all = requestsQ.data ?? [];
+  const all = useMemo(() => requestsQ.data ?? [], [requestsQ.data]);
 
   const myPending = useMemo(
     () =>
       all.filter((r) => {
         if (r.status !== "Submitted") return false;
         const next = r.steps.find((s) => s.decision === "Submitted");
-        return next?.approver === CURRENT_USER || next?.approver === CURRENT_USER_ALT;
+        return next?.approver === CURRENT_USER.email || next?.approver === CURRENT_USER.alt_email;
       }),
     [all],
   );
-  const submittedByMe = useMemo(() => all.filter((r) => r.requester === CURRENT_USER), [all]);
+  const submittedByMe = useMemo(() => all.filter((r) => r.requester === CURRENT_USER.email), [all]);
 
   const visible = useMemo(() => {
     let base: BPMRequest[];
@@ -230,12 +257,12 @@ export function BPMPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("bpm.toolbar.searchPlaceholder")}
-            className="bg-white/5 border border-ms-line rounded-md px-3 py-1.5 text-sm w-64 max-w-full focus:outline-none focus:border-ms-blue/60"
+            className="bg-neutral-10 border border-ms-line rounded-md px-3 py-1.5 text-sm w-64 max-w-full focus:outline-none focus:border-brand-500"
           />
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as BPMRequestType | "all")}
-            className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs"
+            className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs"
           >
             <option value="all">{t("bpm.toolbar.allTypes")}</option>
             <option value="VendorPayment">{t("bpm.types.VendorPayment")}</option>
@@ -256,7 +283,7 @@ export function BPMPage() {
           ) : (
             <div className="overflow-x-auto scrollbar-soft">
               <table className="w-full text-sm min-w-[1100px]">
-                <thead className="text-xs text-ms-muted uppercase tracking-wider bg-white/[0.02] border-b border-ms-line">
+                <thead className="text-xs text-ms-muted uppercase tracking-wider bg-neutral-10 border-b border-ms-line">
                   <tr>
                     <th className="w-10 px-3 py-2"></th>
                     <th className="text-left px-2 py-2 font-medium">{t("bpm.tableNew.type")}</th>
@@ -278,7 +305,7 @@ export function BPMPage() {
                     return (
                       <tr
                         key={r.id}
-                        className="border-b border-ms-line/60 hover:bg-white/[0.03] transition-colors"
+                        className="border-b border-neutral-40 hover:bg-neutral-10 transition-colors"
                       >
                         <td className="px-3 py-2 align-middle">
                           {isSelectable && (
@@ -307,7 +334,7 @@ export function BPMPage() {
                           <div className="flex items-center gap-2">
                             <Avatar name={r.requester} size="xs" />
                             <span className="text-xs text-ms-muted truncate">
-                              {r.requester === CURRENT_USER ? t("common.me") : r.requester}
+                              {r.requester === CURRENT_USER.email ? t("common.me") : r.requester}
                             </span>
                           </div>
                         </td>
@@ -435,15 +462,20 @@ function NewBPMRequestDialog({
           .map((s) => s.trim())
           .filter(Boolean),
       }),
-    onSuccess: () => {
+    onSuccess: (created) => {
       onCreated();
       setTitle("");
       setAmount("12500");
       setNotes("");
       setError(null);
       onClose();
+      toast.success(t("common.created", { name: created.request_number }));
     },
-    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      toast.error(t("common.failedAction", { message: msg }));
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -489,7 +521,7 @@ function NewBPMRequestDialog({
             <select
               value={type}
               onChange={(e) => setType(e.target.value as BPMRequestType)}
-              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+              className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
             >
               <option value="VendorPayment">{t("bpm.types.VendorPayment")}</option>
               <option value="EmployeePayment">{t("bpm.types.EmployeePayment")}</option>
@@ -502,7 +534,7 @@ function NewBPMRequestDialog({
               min={0}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+              className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
             />
           </DialogField>
         </div>
@@ -512,14 +544,14 @@ function NewBPMRequestDialog({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t("bpm.newRequestDialog.fieldTitlePh")}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           />
         </DialogField>
         <DialogField label={t("bpm.newRequestDialog.fieldRequester")}>
           <input
             value={requester}
             onChange={(e) => setRequester(e.target.value)}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           />
         </DialogField>
         <DialogField label={t("bpm.newRequestDialog.fieldApprovers")}>
@@ -527,7 +559,7 @@ function NewBPMRequestDialog({
             value={approvers}
             onChange={(e) => setApprovers(e.target.value)}
             placeholder={t("bpm.newRequestDialog.fieldApproversPh")}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           />
         </DialogField>
         <DialogField label={t("bpm.newRequestDialog.fieldNotes")}>
@@ -536,11 +568,11 @@ function NewBPMRequestDialog({
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("bpm.newRequestDialog.fieldNotesPh")}
             rows={3}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60 resize-none"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500 resize-none"
           />
         </DialogField>
         {error && (
-          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
+          <div className="text-xs text-danger bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
             {error}
           </div>
         )}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RefreshCw } from "lucide-react";
 import { formatRelative } from "@/lib/format";
 
 /**
@@ -29,7 +30,7 @@ export function RefreshButton({
     : t("common.notLoadedYet");
 
   return (
-    <div className="flex items-center gap-2 text-xs text-ms-muted">
+    <div className="flex items-center gap-2 text-xs text-neutral-130">
       <span className="hidden md:inline whitespace-nowrap">{updatedLabel}</span>
       <button
         type="button"
@@ -37,16 +38,14 @@ export function RefreshButton({
         disabled={isFetching}
         title={t("common.refresh")}
         aria-label={t("common.refresh")}
-        className="h-8 w-8 rounded-md border border-ms-line text-ms-muted hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center disabled:opacity-50"
+        className="h-8 w-8 rounded border border-neutral-40 bg-white text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20 transition-colors flex items-center justify-center disabled:opacity-50"
       >
-        <span
+        <RefreshCw
+          size={14}
+          strokeWidth={1.75}
           aria-hidden
-          className={`text-base leading-none inline-block ${
-            isFetching ? "animate-spin" : ""
-          }`}
-        >
-          ⟳
-        </span>
+          className={isFetching ? "animate-spin" : ""}
+        />
       </button>
     </div>
   );

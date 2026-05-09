@@ -39,17 +39,17 @@ function PrimaryKPI({
 }) {
   const { t } = useTranslation();
   const accent =
-    tone === "success" ? "from-emerald-500/15 border-emerald-500/30"
-    : tone === "warning" ? "from-amber-500/15 border-amber-500/30"
-    : tone === "danger" ? "from-rose-500/15 border-rose-500/30"
-    : "from-sky-500/15 border-sky-500/30";
+    tone === "success" ? "border-success/30 bg-success-bg/50"
+    : tone === "warning" ? "border-warning/30 bg-warning-bg/50"
+    : tone === "danger" ? "border-danger/30 bg-danger-bg/50"
+    : "border-brand-200 bg-brand-50";
   const sparkColor =
-    tone === "success" ? "#34d399"
-    : tone === "warning" ? "#f59e0b"
-    : tone === "danger" ? "#fb7185"
-    : "#0078d4";
+    tone === "success" ? "#107C10"
+    : tone === "warning" ? "#A88600"
+    : tone === "danger" ? "#A4262C"
+    : "#0078D4";
   return (
-    <div className={`rounded-xl border bg-gradient-to-br to-transparent p-5 ${accent}`}>
+    <div className={`rounded border p-4 ${accent}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="text-xs uppercase tracking-wide text-ms-muted">{label}</div>
         <Sparkline values={spark} stroke={sparkColor} fill={`${sparkColor}22`} />
@@ -83,13 +83,13 @@ function SecondaryKPI({
   tone?: "info" | "warning" | "success" | "danger" | "neutral";
 }) {
   const dotTone =
-    tone === "success" ? "bg-emerald-400"
+    tone === "success" ? "bg-success"
     : tone === "warning" ? "bg-amber-400"
-    : tone === "danger" ? "bg-rose-400"
+    : tone === "danger" ? "bg-danger"
     : tone === "neutral" ? "bg-slate-400"
     : "bg-sky-400";
   return (
-    <div className="rounded-lg border border-ms-line bg-white/[0.02] p-3 flex flex-col">
+    <div className="rounded-lg border border-ms-line bg-neutral-10 p-3 flex flex-col">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-ms-muted">
         <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dotTone}`} />
         <span className="truncate">{label}</span>
@@ -108,9 +108,9 @@ function SecondaryKPI({
 // ----------------------------------------------------------------------
 function ActivityIcon({ entity, status }: { entity: string; status: string }) {
   const tone =
-    status === "error" ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
-    : status === "ok" ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
-    : "bg-slate-500/20 text-slate-300 border-slate-500/40";
+    status === "error" ? "bg-rose-500/20 text-danger border-rose-500/40"
+    : status === "ok" ? "bg-sky-500/20 text-brand-700 border-sky-500/40"
+    : "bg-slate-500/20 text-neutral-160 border-slate-500/40";
   const initial = entity.slice(0, 1).toUpperCase();
   return (
     <span className={`inline-flex w-6 h-6 rounded-full border items-center justify-center text-[10px] font-bold ${tone}`}>
@@ -150,7 +150,7 @@ export function DashboardPage() {
   );
 
   // ---- spark + trend (derived from audit logs) ----
-  const audit = auditQ.data ?? [];
+  const audit = useMemo(() => auditQ.data ?? [], [auditQ.data]);
   const pipelineBuckets = useMemo(
     () => dailyBuckets(audit, days, (l) => l.timestamp, (l) => l.action_type.startsWith("opportunity") || l.action_type.startsWith("lead.qualified")),
     [audit, days],
@@ -240,7 +240,7 @@ export function DashboardPage() {
       {isLoading || !summary ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-xl border border-ms-line bg-white/[0.02] p-5 space-y-3">
+            <div key={i} className="rounded-xl border border-ms-line bg-neutral-10 p-5 space-y-3">
               <Skeleton className="h-3 w-32" />
               <Skeleton className="h-9 w-32" />
               <Skeleton className="h-3 w-24" />
@@ -328,7 +328,7 @@ export function DashboardPage() {
                   description={t("dashboard.focus.emptyDesc")}
                 />
               ) : (
-                <div className="divide-y divide-ms-line/60">
+                <div className="divide-y divide-neutral-40">
                   {/* At-risk onboardings */}
                   <FocusSection
                     label={t("dashboard.focus.atRisk")}
@@ -448,12 +448,12 @@ function FocusSection({
   const { t } = useTranslation();
   if (count === 0) return null;
   const dotTone =
-    tone === "danger" ? "bg-rose-400"
+    tone === "danger" ? "bg-danger"
     : tone === "warning" ? "bg-amber-400"
     : "bg-sky-400";
   return (
     <section>
-      <header className="flex items-center justify-between px-5 py-3 bg-white/[0.02]">
+      <header className="flex items-center justify-between px-5 py-3 bg-neutral-10">
         <div className="flex items-center gap-2 min-w-0">
           <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dotTone}`} />
           <h3 className="text-sm font-semibold">{label}</h3>
@@ -463,10 +463,10 @@ function FocusSection({
           {count}
         </Badge>
       </header>
-      <ul className="divide-y divide-ms-line/40">{children}</ul>
+      <ul className="divide-y divide-neutral-40">{children}</ul>
       {count > 3 && (
         <div className="px-5 py-2 text-right">
-          <a className="text-xs text-ms-blue hover:underline" href="#">
+          <a className="text-xs text-brand-700 hover:underline" href="#">
             {t("common.viewAll", { count })}
           </a>
         </div>
@@ -485,7 +485,7 @@ function FocusRow({
   right?: React.ReactNode;
 }) {
   return (
-    <li className="px-5 py-2.5 flex items-center gap-3 hover:bg-white/[0.03] transition-colors cursor-pointer">
+    <li className="px-5 py-2.5 flex items-center gap-3 hover:bg-neutral-10 transition-colors cursor-pointer">
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{title}</div>
         <div className="text-xs text-ms-muted truncate">{subtitle}</div>
@@ -501,7 +501,7 @@ function ActivityTimeline({ events }: { events: AuditLog[] }) {
       {events.map((e, i) => {
         const isLast = i === events.length - 1;
         return (
-          <li key={e.id} className="relative pl-12 pr-5 py-2.5 hover:bg-white/[0.03] transition-colors">
+          <li key={e.id} className="relative pl-12 pr-5 py-2.5 hover:bg-neutral-10 transition-colors">
             {!isLast && <span className="absolute left-[26px] top-9 bottom-0 w-px bg-ms-line/60" aria-hidden />}
             <div className="absolute left-4 top-3">
               <ActivityIcon entity={e.entity_type} status={e.status} />

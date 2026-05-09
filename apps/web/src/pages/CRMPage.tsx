@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { CRM } from "@/api/endpoints";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
@@ -44,13 +45,19 @@ export function CRMPage() {
   const oppsQ = useQuery({ queryKey: ["opportunities"], queryFn: CRM.listOpportunities });
   const quotesQ = useQuery({ queryKey: ["quotes"], queryFn: CRM.listQuotes });
 
+  const onMutationError = (e: unknown) =>
+    toast.error(
+      t("common.failedAction", { message: e instanceof Error ? e.message : String(e) }),
+    );
   const qualifyLead = useMutation({
     mutationFn: (id: number) => CRM.qualifyLead(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["opportunities"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(t("crm.leads.qualify"));
     },
+    onError: onMutationError,
   });
   const markWon = useMutation({
     mutationFn: (id: number) => CRM.markWon(id),
@@ -58,7 +65,9 @@ export function CRMPage() {
       qc.invalidateQueries({ queryKey: ["opportunities"] });
       qc.invalidateQueries({ queryKey: ["onboarding"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(t("status.won"));
     },
+    onError: onMutationError,
   });
 
   const owners = useMemo(() => {
@@ -123,7 +132,7 @@ export function CRMPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("crm.toolbar.searchPlaceholder")}
-              className="bg-white/5 border border-ms-line rounded-md px-3 py-1.5 text-sm w-64 max-w-full focus:outline-none focus:border-ms-blue/60"
+              className="bg-neutral-10 border border-ms-line rounded-md px-3 py-1.5 text-sm w-64 max-w-full focus:outline-none focus:border-brand-500"
             />
             <FilterPill
               label={t("crm.toolbar.filterStage")}
@@ -132,7 +141,7 @@ export function CRMPage() {
               active={stageFilter !== "all"}
             />
             <select
-              className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs text-ms-text"
+              className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs text-ms-text"
               value={stageFilter}
               onChange={(e) => setStageFilter(e.target.value as OpportunityStage | "all")}
             >
@@ -144,7 +153,7 @@ export function CRMPage() {
               ))}
             </select>
             <select
-              className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs text-ms-text"
+              className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs text-ms-text"
               value={ownerFilter}
               onChange={(e) => setOwnerFilter(e.target.value)}
             >
@@ -156,7 +165,7 @@ export function CRMPage() {
               ))}
             </select>
           </div>
-          <div className="inline-flex rounded-md border border-ms-line bg-white/[0.03] p-0.5">
+          <div className="inline-flex rounded-md border border-ms-line bg-neutral-10 p-0.5">
             <ViewToggle value={view} onChange={setView} />
           </div>
         </div>
@@ -217,7 +226,7 @@ export function CRMPage() {
               />
             ) : (
               <table className="w-full text-sm">
-                <thead className="text-xs text-ms-muted bg-white/[0.02] border-b border-ms-line">
+                <thead className="text-xs text-ms-muted bg-neutral-10 border-b border-ms-line">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium">{t("crm.fields.company")}</th>
                     <th className="text-left px-4 py-2 font-medium">{t("crm.fields.contact")}</th>
@@ -233,7 +242,7 @@ export function CRMPage() {
                     .map((l) => (
                       <tr
                         key={l.id}
-                        className="border-b border-ms-line/60 hover:bg-white/[0.03] transition-colors"
+                        className="border-b border-neutral-40 hover:bg-neutral-10 transition-colors"
                       >
                         <td className="px-4 py-2">{l.company}</td>
                         <td className="px-4 py-2 text-ms-muted">{l.contact_name}</td>
@@ -265,7 +274,7 @@ export function CRMPage() {
             {(quotesQ.data ?? []).length === 0 ? (
               <EmptyState illustration="default" title={t("crm.quotes.none")} />
             ) : (
-              <ul className="divide-y divide-ms-line/40">
+              <ul className="divide-y divide-neutral-40">
                 {(quotesQ.data ?? []).map((q) => (
                   <li key={q.id} className="px-4 py-2.5 flex items-center justify-between gap-2">
                     <div className="min-w-0">
@@ -325,7 +334,7 @@ function NewOpportunityDialog({
         owner: owner.trim() || null,
         description: description.trim() || null,
       }),
-    onSuccess: () => {
+    onSuccess: (created) => {
       onCreated();
       // reset
       setName("");
@@ -336,8 +345,13 @@ function NewOpportunityDialog({
       setDescription("");
       setError(null);
       onClose();
+      toast.success(t("common.created", { name: created.name }));
     },
-    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      toast.error(t("common.failedAction", { message: msg }));
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -386,7 +400,7 @@ function NewOpportunityDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("crm.newOppDialog.fieldNamePh")}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           />
         </Field>
         <div className="grid grid-cols-2 gap-3">
@@ -394,7 +408,7 @@ function NewOpportunityDialog({
             <select
               value={stage}
               onChange={(e) => setStage(e.target.value as OpportunityStage)}
-              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+              className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
             >
               {STAGES.filter((s) => s !== "lost").map((s) => (
                 <option key={s} value={s}>
@@ -407,7 +421,7 @@ function NewOpportunityDialog({
             <select
               value={probability}
               onChange={(e) => setProbability(e.target.value)}
-              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+              className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
             >
               {["10", "30", "60", "75", "90", "100"].map((v) => (
                 <option key={v} value={v}>
@@ -424,7 +438,7 @@ function NewOpportunityDialog({
               min={0}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+              className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
             />
           </Field>
           <Field label={t("crm.newOppDialog.fieldCloseDate")}>
@@ -432,7 +446,7 @@ function NewOpportunityDialog({
               type="date"
               value={closeDate || defaultCloseDate}
               onChange={(e) => setCloseDate(e.target.value)}
-              className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+              className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
             />
           </Field>
         </div>
@@ -441,7 +455,7 @@ function NewOpportunityDialog({
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
             placeholder={t("crm.newOppDialog.fieldOwnerPh")}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           />
         </Field>
         <Field label={t("crm.newOppDialog.fieldDescription")}>
@@ -450,11 +464,11 @@ function NewOpportunityDialog({
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t("crm.newOppDialog.fieldDescriptionPh")}
             rows={3}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60 resize-none"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500 resize-none"
           />
         </Field>
         {error && (
-          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
+          <div className="text-xs text-danger bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
             {error}
           </div>
         )}
@@ -490,8 +504,8 @@ function FilterPill({
       onClick={onClick}
       className={`text-xs px-2 py-1 rounded-full border ${
         active
-          ? "border-ms-blue/60 bg-ms-blue/15 text-white"
-          : "border-ms-line text-ms-muted hover:text-white"
+          ? "border-brand-500 bg-brand-50 text-white"
+          : "border-ms-line text-ms-muted hover:text-neutral-190"
       } whitespace-nowrap hidden`}
       aria-hidden
     >
@@ -522,8 +536,8 @@ function ViewToggle({
           onClick={() => onChange(o.key)}
           className={`px-2.5 py-1 rounded-sm text-xs whitespace-nowrap transition-colors ${
             value === o.key
-              ? "bg-ms-blue/25 text-white font-semibold ring-1 ring-inset ring-ms-blue/70"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+              ? "bg-brand-100 text-white font-semibold ring-1 ring-inset ring-ms-blue/70"
+              : "text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20"
           }`}
         >
           {o.label}
@@ -567,13 +581,13 @@ function KanbanView({
         return (
           <div
             key={stage}
-            className="rounded-lg border border-ms-line bg-white/[0.02] flex flex-col min-h-[200px]"
+            className="rounded-lg border border-ms-line bg-neutral-10 flex flex-col min-h-[200px]"
           >
-            <div className="px-3 py-2 border-b border-ms-line/60 flex items-center justify-between gap-2">
+            <div className="px-3 py-2 border-b border-neutral-40 flex items-center justify-between gap-2">
               <Badge tone={statusTone(stage)}>{labelOf(stage)}</Badge>
               <span className="text-xs text-ms-muted">{items.length}</span>
             </div>
-            <div className="px-3 py-1.5 text-[11px] text-ms-muted border-b border-ms-line/40 tabular-nums">
+            <div className="px-3 py-1.5 text-[11px] text-ms-muted border-b border-neutral-40 tabular-nums">
               {t("crm.kanban.stageWeighted", { value: formatCurrency(weighted) })}
             </div>
             <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-soft">
@@ -588,7 +602,7 @@ function KanbanView({
                   return (
                     <div
                       key={o.id}
-                      className="rounded-md border border-ms-line/80 bg-[#0e1730]/80 p-2.5 hover:border-ms-blue/40 hover:bg-[#0e1730] transition-all cursor-pointer"
+                      className="rounded-md border border-neutral-40 bg-white p-2.5 hover:border-ms-blue/40 hover:bg-white transition-all cursor-pointer"
                     >
                       <div className="font-medium text-[13px] leading-tight line-clamp-2">{o.name}</div>
                       <div className="mt-1.5 flex items-center justify-between gap-1.5">
@@ -611,7 +625,7 @@ function KanbanView({
                           type="button"
                           onClick={() => onMarkWon(o.id)}
                           disabled={isPending}
-                          className="mt-2 w-full text-[11px] py-1 rounded border border-ms-line text-ms-muted hover:text-white hover:border-ms-blue/60 transition-colors"
+                          className="mt-2 w-full text-[11px] py-1 rounded border border-ms-line text-ms-muted hover:text-neutral-190 hover:border-brand-500 transition-colors"
                         >
                           {t("crm.kanban.markWon")}
                         </button>
@@ -621,7 +635,7 @@ function KanbanView({
                 })
               )}
             </div>
-            <div className="px-3 py-1.5 border-t border-ms-line/40 text-[10px] text-ms-muted text-center tabular-nums">
+            <div className="px-3 py-1.5 border-t border-neutral-40 text-[10px] text-ms-muted text-center tabular-nums">
               {formatCurrency(total)}
             </div>
           </div>
@@ -668,7 +682,7 @@ function ListView({
       <CardBody className="p-0">
         <div className="overflow-x-auto scrollbar-soft">
           <table className="w-full text-sm min-w-[900px]">
-            <thead className="text-xs text-ms-muted uppercase tracking-wider bg-white/[0.02] border-b border-ms-line">
+            <thead className="text-xs text-ms-muted uppercase tracking-wider bg-neutral-10 border-b border-ms-line">
               <tr>
                 <th className="text-left px-4 py-2 font-medium">{t("crm.pipeline.title")}</th>
                 <th className="text-left px-4 py-2 font-medium">{t("crm.toolbar.filterStage")}</th>
@@ -682,7 +696,7 @@ function ListView({
               {opportunities.map((o) => (
                 <tr
                   key={o.id}
-                  className="border-b border-ms-line/60 hover:bg-white/[0.03] transition-colors"
+                  className="border-b border-neutral-40 hover:bg-neutral-10 transition-colors"
                 >
                   <td className="px-4 py-2.5 font-medium">{o.name}</td>
                   <td className="px-4 py-2.5">
@@ -779,7 +793,7 @@ function ForecastView({
           {blocks.map((b) => (
             <div
               key={b.label}
-              className="rounded-lg border border-ms-line bg-white/[0.02] p-3"
+              className="rounded-lg border border-ms-line bg-neutral-10 p-3"
             >
               <div className="text-[11px] uppercase tracking-wide text-ms-muted">
                 {b.label}

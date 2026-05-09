@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { X } from "lucide-react";
 
 /**
  * Lightweight modal dialog. Open / close controlled by the parent. Click
@@ -43,7 +44,7 @@ export function Modal({
       aria-modal="true"
     >
       <div
-        className={`bg-[#0e1730] border border-ms-line rounded-lg shadow-2xl w-full ${width} max-h-[85vh] flex flex-col`}
+        className={`bg-white border border-ms-line rounded-lg shadow-2xl w-full ${width} max-h-[85vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-4 border-b border-ms-line flex items-center justify-between gap-3 shrink-0">
@@ -54,15 +55,15 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-md text-ms-muted hover:text-white hover:bg-white/5 flex items-center justify-center shrink-0"
+            className="h-8 w-8 rounded text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20 flex items-center justify-center shrink-0"
             aria-label="Close"
           >
-            <span aria-hidden className="text-base leading-none">✕</span>
+            <X size={16} strokeWidth={1.75} aria-hidden />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-soft p-5">{children}</div>
         {footer && (
-          <div className="px-5 py-3 border-t border-ms-line bg-white/[0.02] flex items-center justify-end gap-2 shrink-0">
+          <div className="px-5 py-3 border-t border-ms-line bg-neutral-10 flex items-center justify-end gap-2 shrink-0">
             {footer}
           </div>
         )}

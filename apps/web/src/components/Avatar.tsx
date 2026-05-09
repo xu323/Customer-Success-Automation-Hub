@@ -1,13 +1,12 @@
 import clsx from "clsx";
 
 const PALETTE = [
-  "bg-sky-500/30 text-sky-100",
-  "bg-emerald-500/30 text-emerald-100",
-  "bg-amber-500/30 text-amber-100",
-  "bg-violet-500/30 text-violet-100",
-  "bg-rose-500/30 text-rose-100",
-  "bg-cyan-500/30 text-cyan-100",
-  "bg-indigo-500/30 text-indigo-100",
+  "bg-brand-100 text-brand-700",
+  "bg-success-bg text-success",
+  "bg-warning-bg text-neutral-190",
+  "bg-danger-bg text-danger",
+  "bg-info-bg text-brand-700",
+  "bg-neutral-30 text-neutral-160",
 ];
 
 function hash(s: string): number {

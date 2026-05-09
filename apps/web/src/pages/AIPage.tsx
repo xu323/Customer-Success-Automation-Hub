@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import {
+  Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
+  CheckSquare,
+  Mail,
+  RefreshCw,
+  Workflow,
+} from "lucide-react";
 import { AI } from "@/api/endpoints";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
@@ -252,8 +261,8 @@ export function AIPage() {
         <div className="flex" style={{ minHeight: "640px" }}>
           {/* Sidebar */}
           {sidebarOpen && (
-            <div className="w-60 shrink-0 border-r border-ms-line bg-white/[0.02] flex flex-col">
-              <div className="p-3 border-b border-ms-line/60 flex items-center justify-between gap-2">
+            <div className="w-60 shrink-0 border-r border-ms-line bg-neutral-10 flex flex-col">
+              <div className="p-3 border-b border-neutral-40 flex items-center justify-between gap-2">
                 <Button variant="primary" className="flex-1" onClick={startNewChat}>
                   + {t("ai.chat.newChat")}
                 </Button>
@@ -261,9 +270,9 @@ export function AIPage() {
                   type="button"
                   onClick={() => setSidebarOpen(false)}
                   title={t("ai.historySidebar.collapse")}
-                  className="h-8 w-8 rounded-md text-ms-muted hover:text-white hover:bg-white/5 flex items-center justify-center"
+                  className="h-8 w-8 rounded text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20 flex items-center justify-center"
                 >
-                  ◀
+                  <PanelLeftClose size={16} strokeWidth={1.75} aria-hidden />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto scrollbar-soft">
@@ -279,8 +288,8 @@ export function AIPage() {
                         onClick={() => setActiveConvId(c.id)}
                         className={`w-full text-left px-3 py-2 rounded text-xs truncate transition-colors ${
                           c.id === activeConvId
-                            ? "bg-ms-blue/15 text-white border-l-2 border-ms-blue"
-                            : "text-ms-muted hover:text-white hover:bg-white/5"
+                            ? "bg-brand-50 text-white border-l-2 border-ms-blue"
+                            : "text-ms-muted hover:text-neutral-190 hover:bg-neutral-20"
                         }`}
                       >
                         {c.title || t("ai.chat.newChat")}
@@ -300,14 +309,14 @@ export function AIPage() {
             </div>
           )}
           {!sidebarOpen && (
-            <div className="border-r border-ms-line bg-white/[0.02] flex items-start py-3 px-1">
+            <div className="border-r border-ms-line bg-neutral-10 flex items-start py-3 px-1">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
                 title={t("ai.historySidebar.expand")}
-                className="h-8 w-8 rounded-md text-ms-muted hover:text-white hover:bg-white/5 flex items-center justify-center"
+                className="h-8 w-8 rounded text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20 flex items-center justify-center"
               >
-                ▶
+                <PanelLeftOpen size={16} strokeWidth={1.75} aria-hidden />
               </button>
             </div>
           )}
@@ -349,7 +358,7 @@ export function AIPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={t("ai.chat.placeholder")}
-                  className="flex-1 bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+                  className="flex-1 bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
                 />
                 <Button variant="primary" type="submit" disabled={sendQuery.isPending || !input.trim()}>
                   {t("ai.chat.send")}
@@ -377,10 +386,10 @@ function Welcome({ onPick }: { onPick: (q: string) => void }) {
   ];
   return (
     <div className="max-w-2xl mx-auto py-10 text-center">
-      <div className="inline-flex w-16 h-16 rounded-full bg-gradient-to-br from-ms-blue/40 to-indigo-500/40 items-center justify-center text-3xl font-bold mb-4">
-        ✺
+      <div className="inline-flex w-16 h-16 rounded-full bg-brand-100 items-center justify-center mb-4">
+        <Sparkles size={28} strokeWidth={1.75} className="text-brand-700" aria-hidden />
       </div>
-      <div className="text-xl font-semibold mb-1">{t("ai.chat.emptyTitle")}</div>
+      <div className="text-xl font-semibold mb-1 text-neutral-190">{t("ai.chat.emptyTitle")}</div>
       <p className="text-sm text-ms-muted mb-2">{t("ai.chat.welcome")}</p>
       <ul className="inline-block text-left text-sm text-ms-muted space-y-1 mb-6">
         <li>• {t("ai.chat.welcomeBullet1")}</li>
@@ -395,7 +404,7 @@ function Welcome({ onPick }: { onPick: (q: string) => void }) {
             key={s}
             type="button"
             onClick={() => onPick(s)}
-            className="px-3 py-1.5 rounded-full border border-ms-line bg-white/[0.02] text-xs text-ms-text hover:border-ms-blue/60 hover:bg-ms-blue/10 transition-colors"
+            className="px-3 py-1.5 rounded-full border border-ms-line bg-neutral-10 text-xs text-ms-text hover:border-brand-500 hover:bg-brand-50 transition-colors"
           >
             {s}
           </button>
@@ -409,7 +418,7 @@ function UserBubble({ text }: { text: string }) {
   const { t } = useTranslation();
   return (
     <div className="flex items-start gap-3 justify-end">
-      <div className="max-w-[680px] bg-ms-blue/15 border border-ms-blue/30 rounded-lg rounded-tr-sm px-3.5 py-2.5">
+      <div className="max-w-[680px] bg-brand-50 border border-brand-300 rounded-lg rounded-tr-sm px-3.5 py-2.5">
         <div className="text-[10px] uppercase tracking-wider text-ms-muted mb-0.5">
           {t("ai.chat.you")}
         </div>
@@ -430,8 +439,8 @@ function AssistantBubble({
   const { t } = useTranslation();
   return (
     <div className="flex items-start gap-3">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-ms-blue/40 to-indigo-500/40 flex items-center justify-center text-sm font-bold shrink-0">
-        ✺
+      <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center shrink-0">
+        <Sparkles size={16} strokeWidth={1.75} className="text-brand-700" aria-hidden />
       </div>
       <div className="max-w-[680px] flex-1 min-w-0 space-y-2">
         <div className="text-[10px] uppercase tracking-wider text-ms-muted">
@@ -442,13 +451,13 @@ function AssistantBubble({
             </span>
           )}
         </div>
-        <div className="bg-white/[0.04] border border-ms-line rounded-lg rounded-tl-sm px-3.5 py-2.5">
+        <div className="bg-neutral-20 border border-ms-line rounded-lg rounded-tl-sm px-3.5 py-2.5">
           <div className="text-sm whitespace-pre-wrap">{msg.text}</div>
           {msg.bullets && msg.bullets.length > 0 && (
             <ul className="mt-2 space-y-1 text-sm text-ms-muted">
               {msg.bullets.map((b, i) => (
                 <li key={i} className="flex gap-2">
-                  <span aria-hidden className="text-ms-blue">•</span>
+                  <span aria-hidden className="text-brand-700">•</span>
                   <span>{b}</span>
                 </li>
               ))}
@@ -481,10 +490,10 @@ function AssistantBubble({
 function ReferenceChip({ kind, label }: { kind: ActionCardData["references"][number]["kind"]; label: string }) {
   const { t } = useTranslation();
   const tone =
-    kind === "account" ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
-    : kind === "opportunity" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-    : kind === "project" ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-    : "bg-violet-500/15 text-violet-300 border-violet-500/30";
+    kind === "account" ? "bg-sky-500/15 text-brand-700 border-sky-500/30"
+    : kind === "opportunity" ? "bg-emerald-500/15 text-success border-emerald-500/30"
+    : kind === "project" ? "bg-amber-500/15 text-warning border-amber-500/30"
+    : "bg-violet-500/15 text-brand-700 border-violet-500/30";
   return (
     <span className={`text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap ${tone}`}>
       @{t(`ai.references.${kind}` as const)} · {label}
@@ -502,27 +511,31 @@ function ActionCard({
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
-  const typeMap: Record<ActionType, { label: string; icon: string; tone: string }> = {
-    createTask: { label: t("ai.actionCard.typeCreateTask"), icon: "✓", tone: "bg-sky-500/20 text-sky-300" },
-    sendEmail: { label: t("ai.actionCard.typeSendEmail"), icon: "✉", tone: "bg-emerald-500/20 text-emerald-300" },
-    updateOpp: { label: t("ai.actionCard.typeUpdateOpp"), icon: "↻", tone: "bg-amber-500/20 text-amber-300" },
-    triggerWorkflow: { label: t("ai.actionCard.typeTriggerWorkflow"), icon: "⚙", tone: "bg-violet-500/20 text-violet-300" },
+  const typeMap: Record<
+    ActionType,
+    { label: string; Icon: typeof CheckSquare; tone: string }
+  > = {
+    createTask: { label: t("ai.actionCard.typeCreateTask"), Icon: CheckSquare, tone: "bg-info-bg text-brand-700" },
+    sendEmail: { label: t("ai.actionCard.typeSendEmail"), Icon: Mail, tone: "bg-success-bg text-success" },
+    updateOpp: { label: t("ai.actionCard.typeUpdateOpp"), Icon: RefreshCw, tone: "bg-warning-bg text-neutral-190" },
+    triggerWorkflow: { label: t("ai.actionCard.typeTriggerWorkflow"), Icon: Workflow, tone: "bg-brand-100 text-brand-700" },
   };
   const meta = typeMap[action.type];
+  const MetaIcon = meta.Icon;
   return (
     <div
       className={`border rounded-lg overflow-hidden transition-colors ${
         action.status === "confirmed"
           ? "border-emerald-500/40 bg-emerald-500/[0.04]"
           : action.status === "cancelled"
-          ? "border-ms-line/50 bg-white/[0.02] opacity-60"
+          ? "border-ms-line/50 bg-neutral-10 opacity-60"
           : "border-ms-blue/40 bg-ms-blue/[0.04]"
       }`}
     >
-      <div className="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-ms-line/40">
+      <div className="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-neutral-40">
         <div className="flex items-center gap-2 min-w-0">
-          <span className={`inline-flex w-6 h-6 rounded items-center justify-center text-sm font-bold ${meta.tone}`}>
-            {meta.icon}
+          <span className={`inline-flex w-6 h-6 rounded items-center justify-center ${meta.tone}`}>
+            <MetaIcon size={14} strokeWidth={1.75} aria-hidden />
           </span>
           <div className="text-[10px] uppercase tracking-wider text-ms-muted">
             {t("ai.actionCard.label")} · {meta.label}
@@ -543,11 +556,11 @@ function ActionCard({
         )}
       </div>
       {action.status === "draft" && (
-        <div className="flex items-center justify-end gap-2 px-3.5 py-2 bg-white/[0.02] border-t border-ms-line/40">
+        <div className="flex items-center justify-end gap-2 px-3.5 py-2 bg-neutral-10 border-t border-neutral-40">
           <button
             type="button"
             onClick={onCancel}
-            className="text-xs text-ms-muted hover:text-white px-2 py-1 transition-colors"
+            className="text-xs text-ms-muted hover:text-neutral-190 px-2 py-1 transition-colors"
           >
             {t("ai.actionCard.cancel")}
           </button>
@@ -572,14 +585,14 @@ function ThinkingBubble() {
   const { t } = useTranslation();
   return (
     <div className="flex items-start gap-3">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-ms-blue/40 to-indigo-500/40 flex items-center justify-center text-sm font-bold animate-pulse shrink-0">
-        ✺
+      <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center animate-pulse shrink-0">
+        <Sparkles size={16} strokeWidth={1.75} className="text-brand-700" aria-hidden />
       </div>
-      <div className="text-sm text-ms-muted py-2">
+      <div className="text-sm text-neutral-130 py-2">
         <span className="inline-flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-ms-blue animate-pulse" />
-          <span className="w-1.5 h-1.5 rounded-full bg-ms-blue animate-pulse" style={{ animationDelay: "150ms" }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-ms-blue animate-pulse" style={{ animationDelay: "300ms" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" style={{ animationDelay: "150ms" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" style={{ animationDelay: "300ms" }} />
         </span>
         <span className="ml-2">{t("ai.chat.thinking")}</span>
       </div>

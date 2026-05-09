@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { Audit } from "@/api/endpoints";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
@@ -58,7 +60,7 @@ export function AuditPage() {
     queryFn: () => Audit.list({ limit: 500 }),
   });
 
-  const all = auditQ.data ?? [];
+  const all = useMemo(() => auditQ.data ?? [], [auditQ.data]);
 
   const actors = useMemo(() => {
     const set = new Set<string>();
@@ -164,7 +166,7 @@ export function AuditPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "all" | "ok" | "error")}
-              className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs"
+              className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs"
             >
               <option value="all">{t("audit.filtersNew.allStatuses")}</option>
               <option value="ok">{t("audit.filtersNew.success")}</option>
@@ -178,7 +180,7 @@ export function AuditPage() {
             <button
               type="button"
               onClick={resetFilters}
-              className="text-xs text-ms-blue hover:underline ml-2"
+              className="text-xs text-brand-700 hover:underline ml-2"
             >
               {t("audit.filtersNew.reset")}
             </button>
@@ -223,7 +225,7 @@ export function AuditPage() {
           ) : (
             <div className="overflow-x-auto scrollbar-soft">
               <table className="w-full text-sm min-w-[1100px]">
-                <thead className="text-xs text-ms-muted uppercase tracking-wider bg-white/[0.02] border-b border-ms-line">
+                <thead className="text-xs text-ms-muted uppercase tracking-wider bg-neutral-10 border-b border-ms-line">
                   <tr>
                     <th className="w-8 px-2 py-2"></th>
                     <th className="text-left px-4 py-2 font-medium">{t("audit.tableNew.timestamp")}</th>
@@ -286,7 +288,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs max-w-[180px]"
+        className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs max-w-[180px]"
       >
         <option value="all">{anyLabel}</option>
         {options.map((o) => (
@@ -326,7 +328,7 @@ function Histogram({
               <div className="w-full flex flex-col justify-end h-full gap-0.5">
                 {err > 0 && (
                   <div
-                    className="bg-rose-400/70 rounded-t"
+                    className="bg-danger/70 rounded-t"
                     style={{ height: `${Math.max(errPct, total > 0 ? 4 : 0)}%` }}
                   />
                 )}
@@ -349,7 +351,7 @@ function Histogram({
           <span aria-hidden className="w-2 h-2 rounded-sm bg-ms-blue/60" /> ok
         </span>
         <span className="flex items-center gap-1.5">
-          <span aria-hidden className="w-2 h-2 rounded-sm bg-rose-400/70" /> failed
+          <span aria-hidden className="w-2 h-2 rounded-sm bg-danger/70" /> failed
         </span>
       </div>
     </div>
@@ -376,14 +378,17 @@ function Row({
     <>
       <tr
         onClick={onToggle}
-        className={`border-b border-ms-line/60 cursor-pointer transition-colors ${
-          isExpanded ? "bg-ms-blue/[0.06]" : "hover:bg-white/[0.03]"
+        className={`border-b border-neutral-40 cursor-pointer transition-colors ${
+          isExpanded ? "bg-brand-50" : "hover:bg-neutral-10"
         }`}
       >
         <td className="px-2 py-2.5 align-middle text-center">
-          <span aria-hidden className={`text-xs inline-block transition-transform ${isExpanded ? "rotate-90" : ""}`}>
-            ▶
-          </span>
+          <ChevronRight
+            size={14}
+            strokeWidth={1.75}
+            aria-hidden
+            className={`inline-block transition-transform text-neutral-130 ${isExpanded ? "rotate-90" : ""}`}
+          />
         </td>
         <td className="px-4 py-2.5 align-middle text-xs text-ms-muted whitespace-nowrap font-mono">
           {formatDate(row.timestamp)}
@@ -407,14 +412,14 @@ function Row({
         </td>
         <td className="px-4 py-2.5 align-middle text-xs text-ms-muted font-mono">{ip}</td>
       </tr>
-      <tr className="border-b border-ms-line/60">
+      <tr className="border-b border-neutral-40">
         <td colSpan={8} className="p-0">
           <div
             className="grid transition-all duration-200 ease-out"
             style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
           >
             <div className="overflow-hidden">
-              <div className="px-6 py-4 bg-white/[0.02] border-t border-ms-line/40 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="px-6 py-4 bg-neutral-10 border-t border-neutral-40 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <div className="text-[10px] uppercase tracking-wider text-ms-muted mb-1">
                     {t("audit.expanded.message")}
@@ -422,10 +427,10 @@ function Row({
                   <div className="text-sm">{row.message ?? "—"}</div>
                   {row.error_message && (
                     <>
-                      <div className="text-[10px] uppercase tracking-wider text-rose-300 mt-3 mb-1">
+                      <div className="text-[10px] uppercase tracking-wider text-danger mt-3 mb-1">
                         {t("audit.expanded.error")}
                       </div>
-                      <div className="text-xs text-rose-300 break-words">{row.error_message}</div>
+                      <div className="text-xs text-danger break-words">{row.error_message}</div>
                     </>
                   )}
                 </div>
@@ -439,16 +444,18 @@ function Row({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigator.clipboard?.writeText(JSON.stringify(row.payload, null, 2));
+                          void navigator.clipboard
+                            ?.writeText(JSON.stringify(row.payload, null, 2))
+                            .then(() => toast.success(t("audit.expanded.copyJson")));
                         }}
-                        className="text-[10px] text-ms-blue hover:underline"
+                        className="text-[10px] text-brand-700 font-semibold hover:underline"
                       >
                         {t("audit.expanded.copyJson")}
                       </button>
                     )}
                   </div>
                   {row.payload ? (
-                    <pre className="text-[11px] text-ms-muted bg-black/30 rounded p-2 overflow-x-auto scrollbar-soft max-h-48">
+                    <pre className="text-[11px] text-ms-muted bg-neutral-30 rounded p-2 overflow-x-auto scrollbar-soft max-h-48">
                       {JSON.stringify(row.payload, null, 2)}
                     </pre>
                   ) : (

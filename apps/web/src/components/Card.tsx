@@ -11,7 +11,7 @@ export function Card({
   return (
     <div
       className={clsx(
-        "rounded-xl border border-ms-line bg-[#0e1730]/60 shadow-card backdrop-blur-sm",
+        "rounded border border-neutral-40 bg-white shadow-card",
         className,
       )}
     >
@@ -30,10 +30,10 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between px-5 py-4 border-b border-ms-line">
+    <div className="flex items-start justify-between px-4 py-3 border-b border-neutral-40">
       <div>
-        <h2 className="text-base font-semibold tracking-wide">{title}</h2>
-        {subtitle && <p className="text-xs text-ms-muted mt-0.5">{subtitle}</p>}
+        <h2 className="text-sm font-semibold text-neutral-190">{title}</h2>
+        {subtitle && <p className="text-xs text-neutral-130 mt-0.5">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -41,5 +41,5 @@ export function CardHeader({
 }
 
 export function CardBody({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={clsx("p-5", className)}>{children}</div>;
+  return <div className={clsx("p-4", className)}>{children}</div>;
 }

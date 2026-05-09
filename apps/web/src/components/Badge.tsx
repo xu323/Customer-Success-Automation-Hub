@@ -11,12 +11,12 @@ type Tone =
   | "violet";
 
 const toneClasses: Record<Tone, string> = {
-  neutral: "bg-slate-500/15 text-slate-300 border-slate-500/20",
-  info: "bg-sky-500/15 text-sky-300 border-sky-500/20",
-  success: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
-  warning: "bg-amber-500/15 text-amber-300 border-amber-500/20",
-  danger: "bg-rose-500/15 text-rose-300 border-rose-500/20",
-  violet: "bg-violet-500/15 text-violet-300 border-violet-500/20",
+  neutral: "bg-slate-500/15 text-neutral-160 border-slate-500/20",
+  info: "bg-sky-500/15 text-brand-700 border-sky-500/20",
+  success: "bg-emerald-500/15 text-success border-emerald-500/20",
+  warning: "bg-amber-500/15 text-warning border-amber-500/20",
+  danger: "bg-rose-500/15 text-danger border-rose-500/20",
+  violet: "bg-violet-500/15 text-brand-700 border-violet-500/20",
 };
 
 export function Badge({

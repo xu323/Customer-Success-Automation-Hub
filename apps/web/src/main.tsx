@@ -2,9 +2,20 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
 import App from "./App";
 import "./index.css";
 import "./i18n";
+
+// Restore density preference before paint so the user does not see a flash.
+try {
+  const d = window.localStorage.getItem("csah-density");
+  if (d === "compact" || d === "comfy") {
+    document.documentElement.setAttribute("data-density", d);
+  }
+} catch {
+  /* localStorage unavailable */
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +32,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
+        <Toaster
+          richColors
+          position="top-right"
+          toastOptions={{
+            style: { fontFamily: "inherit" },
+          }}
+        />
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,

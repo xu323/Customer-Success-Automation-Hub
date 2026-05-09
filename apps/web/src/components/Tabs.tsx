@@ -22,10 +22,7 @@ export function Tabs<K extends string>({
   return (
     <div
       role="tablist"
-      className={clsx(
-        "flex items-center gap-1 border-b border-ms-line",
-        className,
-      )}
+      className={clsx("flex items-center gap-1 border-b border-neutral-40", className)}
     >
       {tabs.map((tab) => {
         const isActive = tab.key === active;
@@ -40,8 +37,8 @@ export function Tabs<K extends string>({
               "relative px-3 py-2 -mb-px text-sm transition-colors whitespace-nowrap",
               "flex items-center gap-2",
               isActive
-                ? "text-white border-b-2 border-ms-blue font-semibold"
-                : "text-ms-muted hover:text-white border-b-2 border-transparent",
+                ? "text-brand-700 border-b-2 border-brand-500 font-semibold"
+                : "text-neutral-130 hover:text-neutral-190 border-b-2 border-transparent",
             )}
           >
             <span>{tab.label}</span>
@@ -50,10 +47,10 @@ export function Tabs<K extends string>({
                 className={clsx(
                   "min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center",
                   tab.badgeTone === "danger"
-                    ? "bg-rose-500/30 text-rose-200 ring-1 ring-rose-500/60"
+                    ? "bg-danger-bg text-danger"
                     : tab.badgeTone === "info"
-                    ? "bg-ms-blue/25 text-white ring-1 ring-ms-blue/60"
-                    : "bg-white/10 text-ms-muted",
+                    ? "bg-info-bg text-brand-700"
+                    : "bg-neutral-20 text-neutral-160",
                 )}
               >
                 {tab.badge}

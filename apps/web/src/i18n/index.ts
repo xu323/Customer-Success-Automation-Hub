@@ -9,10 +9,10 @@ import ja from "./locales/ja";
 export const SUPPORTED_LANGUAGES = ["zh-TW", "en", "ja"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
-export const LANGUAGE_LABELS: Record<SupportedLanguage, { native: string; flag: string }> = {
-  "zh-TW": { native: "繁體中文", flag: "🇹🇼" },
-  en: { native: "English", flag: "🇺🇸" },
-  ja: { native: "日本語", flag: "🇯🇵" },
+export const LANGUAGE_LABELS: Record<SupportedLanguage, { native: string; short: string }> = {
+  "zh-TW": { native: "繁體中文", short: "繁中" },
+  en: { native: "English", short: "EN" },
+  ja: { native: "日本語", short: "日本語" },
 };
 
 export const STORAGE_KEY = "csah-language";
@@ -61,10 +61,7 @@ i18n
     resources,
     supportedLngs: SUPPORTED_LANGUAGES as unknown as string[],
     fallbackLng: "zh-TW",
-    // Only load the active language. Without this, "zh-TW" would also load "zh",
-    // which has no registered resources and surfaces raw keys.
     load: "currentOnly",
-    // Keep code casing untouched so "zh-TW" matches our resource key exactly.
     cleanCode: false,
     lowerCaseLng: false,
     interpolation: { escapeValue: false },
@@ -72,19 +69,15 @@ i18n
       order: ["localStorage", "navigator", "htmlTag"],
       lookupLocalStorage: STORAGE_KEY,
       caches: ["localStorage"],
-      // Whatever the detector finds (raw localStorage value, navigator.language
-      // like "zh-Hant-TW", "en-GB" etc.), force it into one of our 3 codes.
       convertDetectedLanguage: (lng: string) => normalizeLanguage(lng),
     },
     returnNull: false,
   });
 
-/** Active language for our app, always one of the 3 supported codes. */
 export function getActiveLocale(): SupportedLanguage {
   return normalizeLanguage(i18n.resolvedLanguage ?? i18n.language ?? "zh-TW");
 }
 
-/** Map our language code to a BCP 47 code suitable for Intl.* APIs. */
 export function intlLocale(lang: SupportedLanguage = getActiveLocale()): string {
   switch (lang) {
     case "zh-TW":

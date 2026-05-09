@@ -5,7 +5,6 @@ export type TimeRange = "today" | "7d" | "30d" | "90d";
 
 const RANGES: TimeRange[] = ["today", "7d", "30d", "90d"];
 
-/** Days covered by each range — useful for downstream filtering. */
 export function rangeDays(r: TimeRange): number {
   switch (r) {
     case "today":
@@ -33,7 +32,7 @@ export function TimeRangeSwitcher({
     <div
       role="radiogroup"
       className={clsx(
-        "inline-flex items-center gap-0.5 rounded-md border border-ms-line bg-white/[0.03] p-0.5",
+        "inline-flex items-center gap-0.5 rounded border border-neutral-40 bg-white p-0.5",
         className,
       )}
     >
@@ -47,10 +46,10 @@ export function TimeRangeSwitcher({
             aria-checked={active}
             onClick={() => onChange(r)}
             className={clsx(
-              "px-2.5 py-1 rounded-sm text-xs transition-colors whitespace-nowrap",
+              "h-7 px-2.5 rounded text-xs font-semibold transition-colors whitespace-nowrap",
               active
-                ? "bg-ms-blue/25 text-white font-semibold ring-1 ring-inset ring-ms-blue/70"
-                : "text-slate-400 hover:text-white hover:bg-white/5",
+                ? "bg-brand-50 text-brand-700"
+                : "text-neutral-130 hover:bg-neutral-20 hover:text-neutral-190",
             )}
           >
             {t(`time.${r}`)}

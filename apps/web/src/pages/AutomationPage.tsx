@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Search,
+  X,
+  ArrowUp,
+  ArrowDown,
+  XCircle,
+  CheckCircle2,
+  Info,
+} from "lucide-react";
 import { Automation } from "@/api/endpoints";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
@@ -68,35 +81,35 @@ function TipsBar() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-ms-line rounded-md bg-white/[0.02]">
+    <div className="border border-ms-line rounded-md bg-neutral-10">
       <button
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between px-3 py-2 text-xs text-ms-muted hover:text-white transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-xs text-ms-muted hover:text-neutral-190 transition-colors"
       >
         <span className="flex items-center gap-2">
           <span
             aria-hidden
-            className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-ms-blue/20 text-ms-blue text-[10px] font-bold"
+            className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-50 text-brand-700 text-[10px] font-bold"
           >
             i
           </span>
           {t("automation.intro.toggle_label")}
         </span>
-        <span
+        <ChevronDown
+          size={14}
+          strokeWidth={1.75}
           aria-hidden
           className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        >
-          ▾
-        </span>
+        />
       </button>
       <div
         className="grid transition-all duration-200 ease-out"
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="px-3 pb-3 pt-2 border-t border-ms-line/60 text-sm">
+          <div className="px-3 pb-3 pt-2 border-t border-neutral-40 text-sm">
             <p className="text-ms-muted">{t("automation.intro.body")}</p>
             <ul className="mt-2 space-y-1 text-xs text-ms-muted">
               <li>
@@ -136,9 +149,9 @@ function StatusPill({ enabled, label }: { enabled: boolean; label: string }) {
     <span className="inline-flex items-center gap-1.5 text-xs whitespace-nowrap">
       <span
         aria-hidden
-        className={`w-1.5 h-1.5 rounded-full ${enabled ? "bg-emerald-400" : "bg-slate-500"}`}
+        className={`w-1.5 h-1.5 rounded-full ${enabled ? "bg-success" : "bg-slate-500"}`}
       />
-      <span className={enabled ? "text-emerald-300" : "text-slate-400"}>{label}</span>
+      <span className={enabled ? "text-success" : "text-neutral-130"}>{label}</span>
     </span>
   );
 }
@@ -148,12 +161,12 @@ function SuccessBar({ percent, total }: { percent: number | null; total: number 
     return <span className="text-xs text-ms-muted">—</span>;
   }
   const tone =
-    percent >= 95 ? "bg-emerald-400/80"
+    percent >= 95 ? "bg-success/80"
     : percent >= 80 ? "bg-amber-400/80"
-    : "bg-rose-400/80";
+    : "bg-danger/80";
   return (
     <div className="flex items-center gap-2 min-w-0" title={`${total} runs`}>
-      <div className="flex-1 max-w-[60px] h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="flex-1 max-w-[60px] h-1.5 bg-neutral-20 rounded-full overflow-hidden">
         <div className={`h-full ${tone}`} style={{ width: `${percent}%` }} />
       </div>
       <span className="text-xs text-ms-muted whitespace-nowrap tabular-nums">
@@ -178,11 +191,11 @@ function DemoMenuItem({
       title={t("automation.menu.demoOnly")}
       className={
         "px-3 py-2 text-sm cursor-not-allowed flex items-center justify-between gap-3 " +
-        (tone === "danger" ? "text-rose-300/60" : "text-ms-muted")
+        (tone === "danger" ? "text-danger/60" : "text-ms-muted")
       }
     >
       <span>{label}</span>
-      <span className="text-[9px] uppercase tracking-wider text-ms-muted/70 px-1.5 py-0.5 rounded border border-ms-line/60">
+      <span className="text-[9px] uppercase tracking-wider text-ms-muted/70 px-1.5 py-0.5 rounded border border-neutral-40">
         {t("automation.menu.demoOnly")}
       </span>
     </div>
@@ -221,14 +234,14 @@ function ActionsMenu({ enabled }: { enabled: boolean }) {
         title={t("automation.menu.more")}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="h-8 w-8 rounded-md text-ms-muted hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
+        className="h-8 w-8 rounded-md text-ms-muted hover:text-neutral-190 hover:bg-neutral-20 transition-colors flex items-center justify-center"
       >
-        <span aria-hidden className="text-base leading-none">⋯</span>
+        <MoreHorizontal size={16} strokeWidth={1.75} aria-hidden />
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-1 z-30 min-w-[200px] rounded-md border border-ms-line bg-[#0e1730] shadow-xl overflow-hidden"
+          className="absolute right-0 top-full mt-1 z-30 min-w-[200px] rounded-md border border-ms-line bg-white shadow-xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <DemoMenuItem label={t("automation.menu.edit")} />
@@ -236,7 +249,7 @@ function ActionsMenu({ enabled }: { enabled: boolean }) {
             label={enabled ? t("automation.menu.disable") : t("automation.menu.enable")}
           />
           <DemoMenuItem label={t("automation.menu.duplicate")} />
-          <div className="border-t border-ms-line/60" />
+          <div className="border-t border-neutral-40" />
           <DemoMenuItem label={t("automation.menu.delete")} tone="danger" />
         </div>
       )}
@@ -261,12 +274,15 @@ export function AutomationPage() {
 
   const run = useMutation({
     mutationFn: (id: number) =>
-      Automation.runWorkflow(id, { account_name: "Manual demo trigger", amount: 100_000 }),
+      Automation.runWorkflow(id, { account_name: "Sample customer", amount: 100_000 }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["runs"] });
       qc.invalidateQueries({ queryKey: ["onboarding"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(t("automation.definitions.run"));
     },
+    onError: (e) =>
+      toast.error(t("common.failedAction", { message: e instanceof Error ? e.message : String(e) })),
   });
 
   // ---- friendly label resolvers (with raw-name fallback) ----
@@ -351,18 +367,18 @@ export function AutomationPage() {
         <div className="px-5 py-3 border-b border-ms-line flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap min-w-0 flex-1">
             <div className="relative">
-              <span
+              <Search
+                size={14}
+                strokeWidth={1.75}
                 aria-hidden
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-ms-muted text-xs"
-              >
-                ⌕
-              </span>
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-90"
+              />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("automation.toolbar.searchPlaceholder")}
-                className="bg-white/5 border border-ms-line rounded-md pl-8 pr-3 py-1.5 text-sm w-64 max-w-full focus:outline-none focus:border-ms-blue/60"
+                className="bg-neutral-10 border border-ms-line rounded-md pl-8 pr-3 py-1.5 text-sm w-64 max-w-full focus:outline-none focus:border-brand-500"
               />
             </div>
             <div className="flex items-center gap-2 text-xs text-ms-muted">
@@ -372,7 +388,7 @@ export function AutomationPage() {
                 onChange={(e) =>
                   setStatusFilter(e.target.value as "all" | "enabled" | "disabled")
                 }
-                className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-sm text-ms-text focus:outline-none focus:border-ms-blue/60"
+                className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-sm text-ms-text focus:outline-none focus:border-brand-500"
               >
                 <option value="all">{t("automation.toolbar.statusAll")}</option>
                 <option value="enabled">{t("automation.toolbar.statusEnabled")}</option>
@@ -404,25 +420,25 @@ export function AutomationPage() {
               </colgroup>
               <thead className="text-xs text-ms-muted uppercase tracking-wider">
                 <tr>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-2 py-2 text-left">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-2 py-2 text-left">
                     <span className="sr-only">{t("automation.table.expand")}</span>
                   </th>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
                     {t("automation.definitions.name")}
                   </th>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
                     {t("automation.definitions.trigger")}
                   </th>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
                     {t("automation.definitions.enabled")}
                   </th>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
                     {t("automation.table.lastRun")}
                   </th>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-4 py-2 text-left font-medium whitespace-nowrap">
                     {t("automation.table.successRate")}
                   </th>
-                  <th className="sticky top-0 z-10 bg-[#0e1730] border-b border-ms-line px-4 py-2 text-right font-medium whitespace-nowrap">
+                  <th className="sticky top-0 z-10 bg-white border-b border-ms-line px-4 py-2 text-right font-medium whitespace-nowrap">
                     {t("automation.table.actionsCol")}
                   </th>
                 </tr>
@@ -486,7 +502,7 @@ export function AutomationPage() {
           )}
           {(runsQ.data ?? []).map((r) => (
             <div key={r.id} className="border border-ms-line rounded-md">
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-white/[0.02]">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-neutral-10">
                 <div className="flex flex-wrap items-center gap-3 min-w-0">
                   <Badge tone={statusTone(r.status)}>{labelOf(r.status)}</Badge>
                   <div className="font-medium text-sm whitespace-nowrap">
@@ -501,16 +517,16 @@ export function AutomationPage() {
                   {r.finished_at ? formatDate(r.finished_at) : t("automation.runs.runningLabel")}
                 </div>
               </div>
-              <ol className="divide-y divide-ms-line/60">
+              <ol className="divide-y divide-neutral-40">
                 {r.action_logs.map((log) => (
                   <li key={log.id} className="px-4 py-2 flex items-start gap-3">
-                    <div className="h-6 w-6 shrink-0 rounded-full bg-ms-blue/20 border border-ms-blue/30 flex items-center justify-center text-xs">
+                    <div className="h-6 w-6 shrink-0 rounded-full bg-brand-50 border border-brand-300 flex items-center justify-center text-xs">
                       {log.sequence}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium break-words">
                         {actionLabel(log.action_type)}
-                        <code className="ml-2 text-[11px] text-ms-muted bg-white/5 rounded px-1.5 py-0.5 break-all">
+                        <code className="ml-2 text-[11px] text-ms-muted bg-neutral-10 rounded px-1.5 py-0.5 break-all">
                           {log.action_type}
                         </code>
                       </div>
@@ -518,7 +534,7 @@ export function AutomationPage() {
                         <div className="text-xs text-ms-muted break-words">{log.message}</div>
                       )}
                       {log.output && (
-                        <pre className="text-[11px] text-ms-muted bg-black/20 rounded mt-1 p-2 overflow-x-auto scrollbar-soft">
+                        <pre className="text-[11px] text-ms-muted bg-neutral-30 rounded mt-1 p-2 overflow-x-auto scrollbar-soft">
                           {JSON.stringify(log.output, null, 2)}
                         </pre>
                       )}
@@ -537,7 +553,7 @@ export function AutomationPage() {
                   </li>
                 ))}
                 {r.error_message && (
-                  <li className="px-4 py-2 text-sm text-rose-300">
+                  <li className="px-4 py-2 text-sm text-danger">
                     {t("automation.runs.error", { message: r.error_message })}
                   </li>
                 )}
@@ -610,7 +626,7 @@ function NewWorkflowDialog({
         enabled,
       });
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       onCreated();
       // reset
       setName("");
@@ -621,8 +637,13 @@ function NewWorkflowDialog({
       setActions([{ type: "send_notification" }]);
       setError(null);
       onClose();
+      toast.success(t("common.created", { name: created.name }));
     },
-    onError: (e) => setError(e instanceof Error ? e.message : String(e)),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      toast.error(t("common.failedAction", { message: msg }));
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -679,7 +700,7 @@ function NewWorkflowDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("automation.newWorkflowDialog.fieldNamePh")}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           />
         </WfField>
         <WfField label={t("automation.newWorkflowDialog.fieldDescription")}>
@@ -688,14 +709,14 @@ function NewWorkflowDialog({
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t("automation.newWorkflowDialog.fieldDescriptionPh")}
             rows={2}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60 resize-none"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500 resize-none"
           />
         </WfField>
         <WfField label={t("automation.newWorkflowDialog.fieldTrigger")}>
           <select
             value={trigger}
             onChange={(e) => setTrigger(e.target.value)}
-            className="w-full bg-white/5 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-ms-blue/60"
+            className="w-full bg-neutral-10 border border-ms-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-brand-500"
           >
             {TRIGGER_EVENTS.map((ev) => {
               const label =
@@ -724,7 +745,7 @@ function NewWorkflowDialog({
               onClick={() =>
                 setConditions((p) => [...p, { path: "amount", op: ">=", value: "0" }])
               }
-              className="text-xs text-ms-blue hover:underline"
+              className="text-xs text-brand-700 hover:underline"
             >
               {t("automation.newWorkflowDialog.addCondition")}
             </button>
@@ -748,7 +769,7 @@ function NewWorkflowDialog({
                       )
                     }
                     placeholder={t("automation.newWorkflowDialog.conditionPathPh")}
-                    className="flex-1 bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-ms-blue/60"
+                    className="flex-1 bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-brand-500"
                   />
                   <select
                     value={c.op}
@@ -757,7 +778,7 @@ function NewWorkflowDialog({
                         prev.map((x, j) => (j === i ? { ...x, op: e.target.value } : x)),
                       )
                     }
-                    className="bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs"
+                    className="bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs"
                   >
                     {CONDITION_OPS.map((op) => (
                       <option key={op} value={op}>
@@ -773,15 +794,15 @@ function NewWorkflowDialog({
                       )
                     }
                     placeholder={t("automation.newWorkflowDialog.conditionValuePh")}
-                    className="w-32 bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-ms-blue/60"
+                    className="w-32 bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-brand-500"
                   />
                   <button
                     type="button"
                     onClick={() => setConditions((prev) => prev.filter((_, j) => j !== i))}
                     title={t("automation.newWorkflowDialog.removeRow")}
-                    className="text-ms-muted hover:text-rose-300 px-2"
+                    className="h-7 w-7 rounded text-neutral-130 hover:text-danger hover:bg-danger-bg flex items-center justify-center"
                   >
-                    ✕
+                    <X size={14} strokeWidth={1.75} aria-hidden />
                   </button>
                 </li>
               ))}
@@ -798,7 +819,7 @@ function NewWorkflowDialog({
             <button
               type="button"
               onClick={() => setActions((p) => [...p, { type: "send_notification" }])}
-              className="text-xs text-ms-blue hover:underline"
+              className="text-xs text-brand-700 hover:underline"
             >
               {t("automation.newWorkflowDialog.addAction")}
             </button>
@@ -807,7 +828,7 @@ function NewWorkflowDialog({
             {t("automation.newWorkflowDialog.sectionActionsHint")}
           </p>
           {actions.length === 0 ? (
-            <div className="text-xs text-rose-300 italic px-3 py-2 border border-dashed border-rose-500/40 rounded">
+            <div className="text-xs text-danger italic px-3 py-2 border border-dashed border-rose-500/40 rounded">
               {t("automation.newWorkflowDialog.validationActions")}
             </div>
           ) : (
@@ -822,7 +843,7 @@ function NewWorkflowDialog({
                         prev.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)),
                       )
                     }
-                    className="flex-1 bg-white/5 border border-ms-line rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-ms-blue/60"
+                    className="flex-1 bg-neutral-10 border border-ms-line rounded-md px-2 py-1.5 text-xs focus:outline-none focus:border-brand-500"
                   >
                     {ACTION_TYPES.map((tp) => (
                       <option key={tp} value={tp}>
@@ -836,26 +857,26 @@ function NewWorkflowDialog({
                     disabled={i === 0}
                     onClick={() => moveAction(i, -1)}
                     title={t("automation.newWorkflowDialog.moveUp")}
-                    className="text-ms-muted hover:text-white px-1.5 disabled:opacity-30"
+                    className="h-7 w-7 rounded text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20 flex items-center justify-center disabled:opacity-30"
                   >
-                    ↑
+                    <ArrowUp size={14} strokeWidth={1.75} aria-hidden />
                   </button>
                   <button
                     type="button"
                     disabled={i === actions.length - 1}
                     onClick={() => moveAction(i, 1)}
                     title={t("automation.newWorkflowDialog.moveDown")}
-                    className="text-ms-muted hover:text-white px-1.5 disabled:opacity-30"
+                    className="h-7 w-7 rounded text-neutral-130 hover:text-neutral-190 hover:bg-neutral-20 flex items-center justify-center disabled:opacity-30"
                   >
-                    ↓
+                    <ArrowDown size={14} strokeWidth={1.75} aria-hidden />
                   </button>
                   <button
                     type="button"
                     onClick={() => setActions((prev) => prev.filter((_, j) => j !== i))}
                     title={t("automation.newWorkflowDialog.removeRow")}
-                    className="text-ms-muted hover:text-rose-300 px-2"
+                    className="h-7 w-7 rounded text-neutral-130 hover:text-danger hover:bg-danger-bg flex items-center justify-center"
                   >
-                    ✕
+                    <X size={14} strokeWidth={1.75} aria-hidden />
                   </button>
                 </li>
               ))}
@@ -874,7 +895,7 @@ function NewWorkflowDialog({
         </label>
 
         {error && (
-          <div className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
+          <div className="text-xs text-danger bg-rose-500/10 border border-rose-500/30 rounded px-3 py-2">
             {error}
           </div>
         )}
@@ -929,8 +950,8 @@ function FragmentRow(props: {
       <tr
         onClick={onToggle}
         className={
-          "h-14 border-b border-ms-line/60 transition-colors cursor-pointer " +
-          (isExpanded ? "bg-ms-blue/[0.06]" : "hover:bg-white/[0.03]")
+          "h-14 border-b border-neutral-40 transition-colors cursor-pointer " +
+          (isExpanded ? "bg-ms-blue/[0.06]" : "hover:bg-neutral-10")
         }
       >
         <td className="px-2 align-middle">
@@ -940,7 +961,7 @@ function FragmentRow(props: {
               e.stopPropagation();
               onToggle();
             }}
-            className="h-8 w-8 rounded-md flex items-center justify-center text-ms-muted hover:text-white hover:bg-white/5 transition-colors"
+            className="h-8 w-8 rounded-md flex items-center justify-center text-ms-muted hover:text-neutral-190 hover:bg-neutral-20 transition-colors"
             aria-expanded={isExpanded}
             title={
               isExpanded
@@ -948,12 +969,12 @@ function FragmentRow(props: {
                 : t("automation.table.expand")
             }
           >
-            <span
+            <ChevronRight
+              size={14}
+              strokeWidth={1.75}
               aria-hidden
-              className={`text-xs transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
-            >
-              ▶
-            </span>
+              className={`text-neutral-130 transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
+            />
           </button>
         </td>
         <td className="px-4 align-middle">
@@ -967,7 +988,7 @@ function FragmentRow(props: {
           )}
         </td>
         <td className="px-4 align-middle">
-          <code className="text-[11px] bg-white/5 rounded px-1.5 py-0.5 inline-block max-w-full truncate">
+          <code className="text-[11px] bg-neutral-10 rounded px-1.5 py-0.5 inline-block max-w-full truncate">
             {triggerName}
           </code>
         </td>
@@ -1002,7 +1023,7 @@ function FragmentRow(props: {
       </tr>
 
       {/* Always-rendered detail row that animates open/closed via grid-rows */}
-      <tr className="border-b border-ms-line/60">
+      <tr className="border-b border-neutral-40">
         <td colSpan={7} className="p-0">
           <div
             className="grid transition-all duration-200 ease-out"
@@ -1051,7 +1072,7 @@ function ExpandedDetail({
   const hasConditions = (w.conditions ?? []).length > 0;
 
   return (
-    <div className="px-6 py-5 bg-white/[0.02] border-t border-ms-line/40 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="px-6 py-5 bg-neutral-10 border-t border-neutral-40 grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* --- LEFT: trigger / conditions / actions --- */}
       <div className="space-y-4 text-sm">
         <div>
@@ -1060,7 +1081,7 @@ function ExpandedDetail({
           </div>
           <div>
             {eventLabel(triggerName)}
-            <code className="ml-2 text-[11px] text-ms-muted bg-white/5 rounded px-1.5 py-0.5 break-all">
+            <code className="ml-2 text-[11px] text-ms-muted bg-neutral-10 rounded px-1.5 py-0.5 break-all">
               {triggerName}
             </code>
           </div>
@@ -1095,7 +1116,7 @@ function ExpandedDetail({
                 <span className="text-xs text-ms-muted pt-0.5 shrink-0">{i + 1}.</span>
                 <span>
                   {actionLabel(a.type)}
-                  <code className="ml-2 text-[11px] text-ms-muted bg-white/5 rounded px-1.5 py-0.5 break-all">
+                  <code className="ml-2 text-[11px] text-ms-muted bg-neutral-10 rounded px-1.5 py-0.5 break-all">
                     {a.type}
                   </code>
                 </span>
@@ -1119,12 +1140,12 @@ function ExpandedDetail({
             {last5.map((r) => {
               const ok = r.status === "succeeded";
               const failed = r.status === "failed";
-              const icon = ok ? "✓" : failed ? "✕" : "•";
+              const RunIcon = ok ? CheckCircle2 : failed ? XCircle : Info;
               const iconColor = ok
-                ? "text-emerald-400"
+                ? "text-success"
                 : failed
-                ? "text-rose-400"
-                : "text-amber-400";
+                ? "text-danger"
+                : "text-warning";
               const ms =
                 r.finished_at
                   ? new Date(r.finished_at).getTime() - new Date(r.started_at).getTime()
@@ -1132,9 +1153,9 @@ function ExpandedDetail({
               return (
                 <li
                   key={r.id}
-                  className="flex items-center gap-2 text-xs border border-ms-line/60 rounded px-2 py-1.5"
+                  className="flex items-center gap-2 text-xs border border-neutral-40 rounded px-2 py-1.5"
                 >
-                  <span className={`${iconColor} font-bold w-4 text-center`}>{icon}</span>
+                  <RunIcon size={14} strokeWidth={1.75} className={iconColor} aria-hidden />
                   <Badge tone={statusToneCompat(r.status)}>{labelOf(r.status)}</Badge>
                   <span
                     className="text-ms-muted truncate flex-1"
@@ -1161,7 +1182,7 @@ function ExpandedDetail({
                 .getElementById("recent-runs")
                 ?.scrollIntoView({ behavior: "smooth" });
             }}
-            className="text-xs text-ms-blue hover:underline"
+            className="text-xs text-brand-700 hover:underline"
           >
             {t("automation.expanded.viewFullHistory")}
           </a>

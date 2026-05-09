@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ChevronRight, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Audit, Onboarding } from "@/api/endpoints";
 import { Card, CardBody } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
@@ -19,16 +21,16 @@ const STAGES = ["planning", "in_progress", "on_hold", "completed"] as const;
 
 function HealthBar({ score }: { score: number }) {
   const tone =
-    score >= 80 ? "bg-emerald-400/70"
+    score >= 80 ? "bg-success/70"
     : score >= 60 ? "bg-amber-400/70"
-    : "bg-rose-400/70";
+    : "bg-danger/70";
   const labelTone =
-    score >= 80 ? "text-emerald-300"
-    : score >= 60 ? "text-amber-300"
-    : "text-rose-300";
+    score >= 80 ? "text-success"
+    : score >= 60 ? "text-warning"
+    : "text-danger";
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <div className="flex-1 max-w-[80px] h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="flex-1 max-w-[80px] h-1.5 bg-neutral-20 rounded-full overflow-hidden">
         <div className={`h-full ${tone}`} style={{ width: `${Math.max(0, Math.min(100, score))}%` }} />
       </div>
       <span className={`text-xs tabular-nums font-medium ${labelTone}`}>{score.toFixed(0)}</span>
@@ -47,7 +49,7 @@ function StageProgress({ stage, totalTasks, doneTasks }: { stage: string; totalT
           <div
             key={i}
             className={`flex-1 h-1 rounded-full ${
-              i < stageNum ? "bg-ms-blue" : "bg-white/10"
+              i < stageNum ? "bg-ms-blue" : "bg-neutral-20"
             }`}
           />
         ))}
@@ -117,10 +119,13 @@ export function OnboardingPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["onboarding"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(t("onboarding.expandedDetail.taskDone"));
     },
+    onError: (e) =>
+      toast.error(t("common.failedAction", { message: e instanceof Error ? e.message : String(e) })),
   });
 
-  const projects = projectsQ.data ?? [];
+  const projects = useMemo(() => projectsQ.data ?? [], [projectsQ.data]);
   const active = projects.filter((p) => p.status !== "completed");
   const atRisk = active.filter((p) => p.health_score < 70);
   const onTrackPct = active.length > 0
@@ -217,7 +222,7 @@ export function OnboardingPage() {
           ) : (
             <div className="overflow-x-auto scrollbar-soft">
               <table className="w-full text-sm min-w-[1000px]">
-                <thead className="text-xs text-ms-muted uppercase tracking-wider bg-white/[0.02] border-b border-ms-line">
+                <thead className="text-xs text-ms-muted uppercase tracking-wider bg-neutral-10 border-b border-ms-line">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium">{t("onboarding.table.customer")}</th>
                     <th className="text-left px-4 py-2 font-medium">{t("onboarding.table.health")}</th>
@@ -284,12 +289,12 @@ function KPI({
 }) {
   const { t } = useTranslation();
   const dot =
-    tone === "success" ? "bg-emerald-400"
+    tone === "success" ? "bg-success"
     : tone === "warning" ? "bg-amber-400"
-    : tone === "danger" ? "bg-rose-400"
+    : tone === "danger" ? "bg-danger"
     : "bg-sky-400";
   return (
-    <div className="rounded-lg border border-ms-line bg-white/[0.02] p-4">
+    <div className="rounded-lg border border-ms-line bg-neutral-10 p-4">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-ms-muted">
         <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dot}`} />
         {label}
@@ -331,8 +336,8 @@ function OnboardingRow({
     <>
       <tr
         onClick={onToggle}
-        className={`border-b border-ms-line/60 cursor-pointer transition-colors ${
-          isExpanded ? "bg-ms-blue/[0.06]" : "hover:bg-white/[0.03]"
+        className={`border-b border-neutral-40 cursor-pointer transition-colors ${
+          isExpanded ? "bg-ms-blue/[0.06]" : "hover:bg-neutral-10"
         }`}
       >
         <td className="px-4 py-3 align-middle">
@@ -374,20 +379,23 @@ function OnboardingRow({
           <RiskFlagChips flags={flags} />
         </td>
         <td className="px-4 py-3 align-middle text-right">
-          <span aria-hidden className={`text-xs transition-transform inline-block ${isExpanded ? "rotate-90" : ""}`}>
-            ▶
-          </span>
+          <ChevronRight
+            size={14}
+            strokeWidth={1.75}
+            aria-hidden
+            className={`inline-block transition-transform text-neutral-130 ${isExpanded ? "rotate-90" : ""}`}
+          />
         </td>
       </tr>
       {/* Expanded detail row */}
-      <tr className="border-b border-ms-line/60">
+      <tr className="border-b border-neutral-40">
         <td colSpan={7} className="p-0">
           <div
             className="grid transition-all duration-200 ease-out"
             style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
           >
             <div className="overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-white/[0.02] border-t border-ms-line/40">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-neutral-10 border-t border-neutral-40">
                 {/* Tasks */}
                 <div>
                   <div className="text-xs uppercase tracking-wider text-ms-muted mb-2">
@@ -443,18 +451,18 @@ function TaskRow({ task, onComplete }: { task: OnboardingTask; onComplete: () =>
     <li className="flex items-center justify-between gap-2 text-xs">
       <div className="flex items-center gap-2 min-w-0">
         <span
-          className={`w-3 h-3 rounded border ${
+          className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
             isDone
-              ? "bg-emerald-400/70 border-emerald-400/70"
+              ? "bg-success border-success"
               : isOverdue
-              ? "border-rose-400/70"
-              : "border-ms-line"
-          } flex items-center justify-center`}
+              ? "border-danger"
+              : "border-neutral-60"
+          }`}
           aria-hidden
         >
-          {isDone && <span className="text-[10px] text-white">✓</span>}
+          {isDone && <Check size={10} strokeWidth={3} className="text-white" />}
         </span>
-        <span className={`truncate ${isDone ? "text-ms-muted line-through" : ""}`}>
+        <span className={`truncate ${isDone ? "text-neutral-90 line-through" : "text-neutral-190"}`}>
           {task.title}
         </span>
         {isOverdue && (
@@ -470,9 +478,11 @@ function TaskRow({ task, onComplete }: { task: OnboardingTask; onComplete: () =>
             e.stopPropagation();
             onComplete();
           }}
-          className="text-[10px] text-ms-blue hover:underline"
+          aria-label={t("onboarding.project.markComplete")}
+          title={t("onboarding.project.markComplete")}
+          className="h-6 w-6 rounded text-neutral-130 hover:text-success hover:bg-success-bg flex items-center justify-center"
         >
-          ✓
+          <Check size={12} strokeWidth={2} aria-hidden />
         </button>
       )}
     </li>

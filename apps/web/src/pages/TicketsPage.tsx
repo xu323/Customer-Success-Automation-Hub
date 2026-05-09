@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Audit, Tickets } from "@/api/endpoints";
 import { Card, CardBody, CardHeader } from "@/components/Card";
 import { Badge, statusTone, useStatusLabel } from "@/components/Badge";
@@ -50,10 +51,10 @@ function severityToP(sev: string): string {
 }
 
 function severityRowAccent(sev: string): string {
-  if (sev === "sev1") return "border-l-4 border-rose-500";
-  if (sev === "sev2") return "border-l-4 border-amber-500";
-  if (sev === "sev3") return "border-l-4 border-sky-500";
-  return "border-l-4 border-slate-500";
+  if (sev === "sev1") return "border-l-[3px] border-danger";
+  if (sev === "sev2") return "border-l-[3px] border-warning";
+  if (sev === "sev3") return "border-l-[3px] border-brand-500";
+  return "border-l-[3px] border-neutral-60";
 }
 
 function formatAge(createdAt: string, lng: string): string {
@@ -89,14 +90,17 @@ export function TicketsPage() {
   });
 
   const resolve = useMutation({
-    mutationFn: (id: number) => Tickets.resolve(id, "Resolved via console"),
+    mutationFn: (id: number) => Tickets.resolve(id, "Resolved"),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tickets"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(t("tickets.table.resolveBtn"));
     },
+    onError: (e) =>
+      toast.error(t("common.failedAction", { message: e instanceof Error ? e.message : String(e) })),
   });
 
-  const tickets = ticketsQ.data ?? [];
+  const tickets = useMemo(() => ticketsQ.data ?? [], [ticketsQ.data]);
   const open = tickets.filter((t) => t.status !== "resolved" && t.status !== "closed");
   const p1 = open.filter((t) => t.severity === "sev1").length;
   const p2 = open.filter((t) => t.severity === "sev2").length;
@@ -227,7 +231,7 @@ export function TicketsPage() {
               ) : (
                 <div className="overflow-x-auto scrollbar-soft">
                   <table className="w-full text-sm min-w-[800px]">
-                    <thead className="text-xs text-ms-muted uppercase tracking-wider bg-white/[0.02] border-b border-ms-line">
+                    <thead className="text-xs text-ms-muted uppercase tracking-wider bg-neutral-10 border-b border-ms-line">
                       <tr>
                         <th className="text-left px-4 py-2 font-medium">{t("tickets.tableNew.severity")}</th>
                         <th className="text-left px-4 py-2 font-medium">{t("tickets.tableNew.title")}</th>
@@ -243,7 +247,7 @@ export function TicketsPage() {
                         return (
                           <tr
                             key={tk.id}
-                            className={`border-b border-ms-line/60 hover:bg-white/[0.03] transition-colors ${accent}`}
+                            className={`border-b border-neutral-40 hover:bg-neutral-10 transition-colors ${accent}`}
                           >
                             <td className="px-4 py-2.5 align-middle">
                               <SeverityChip severity={tk.severity} />
@@ -306,13 +310,13 @@ export function TicketsPage() {
                 const uptime = syntheticUptime(svc);
                 const band = uptimeBand(uptime);
                 const dot =
-                  band === "healthy" ? "bg-emerald-400"
+                  band === "healthy" ? "bg-success"
                   : band === "degraded" ? "bg-amber-400"
-                  : "bg-rose-400";
+                  : "bg-danger";
                 return (
                   <li
                     key={svc}
-                    className="rounded border border-ms-line/60 bg-white/[0.02] p-2.5"
+                    className="rounded border border-neutral-40 bg-neutral-10 p-2.5"
                   >
                     <div className="flex items-center gap-2 mb-0.5">
                       <span aria-hidden className={`w-2 h-2 rounded-full ${dot}`} />
@@ -346,7 +350,7 @@ export function TicketsPage() {
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
                     <div className="w-full flex flex-col justify-end h-full">
                       <div
-                        className="bg-rose-400/40 rounded-t"
+                        className="bg-danger/40 rounded-t"
                         style={{ height: `${heightPct}%`, minHeight: b.count > 0 ? "4px" : "0px" }}
                         title={`${b.date}: ${b.count}`}
                       />
@@ -375,7 +379,7 @@ export function TicketsPage() {
                       <span>{t(`tickets.services.${d.key}` as const)}</span>
                       <span className="tabular-nums text-ms-muted">{d.count}</span>
                     </div>
-                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-neutral-20 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-ms-blue/60"
                         style={{ width: `${widthPct}%` }}
@@ -408,12 +412,12 @@ function KPICard({
   tone: "info" | "warning" | "success" | "danger";
 }) {
   const dot =
-    tone === "success" ? "bg-emerald-400"
+    tone === "success" ? "bg-success"
     : tone === "warning" ? "bg-amber-400"
-    : tone === "danger" ? "bg-rose-400"
+    : tone === "danger" ? "bg-danger"
     : "bg-sky-400";
   return (
-    <div className="rounded-lg border border-ms-line bg-white/[0.02] p-4">
+    <div className="rounded-lg border border-ms-line bg-neutral-10 p-4">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-ms-muted">
         <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dot}`} />
         {label}
@@ -431,7 +435,7 @@ function OnCallCard() {
   const { t } = useTranslation();
   const name = t("tickets.kpi.onCallName");
   return (
-    <div className="rounded-lg border border-ms-line bg-white/[0.02] p-4">
+    <div className="rounded-lg border border-ms-line bg-neutral-10 p-4">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-ms-muted">
         <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-violet-400" />
         {t("tickets.kpi.onCallNow")}
@@ -451,9 +455,9 @@ function SeverityChip({ severity }: { severity: string }) {
   const { t } = useTranslation();
   const code = severityToP(severity);
   const tone =
-    code === "p1" ? "bg-rose-500/30 text-rose-200 ring-rose-500/60"
-    : code === "p2" ? "bg-amber-500/30 text-amber-200 ring-amber-500/60"
-    : code === "p3" ? "bg-sky-500/30 text-sky-200 ring-sky-500/60"
+    code === "p1" ? "bg-rose-500/30 text-danger ring-rose-500/60"
+    : code === "p2" ? "bg-amber-500/30 text-warning ring-amber-500/60"
+    : code === "p3" ? "bg-sky-500/30 text-brand-700 ring-sky-500/60"
     : "bg-slate-500/30 text-slate-200 ring-slate-500/60";
   return (
     <span
