@@ -32,10 +32,10 @@ export function LanguageSwitcher() {
             onClick={() => handleChange(lang)}
             aria-pressed={active}
             className={
-              "px-2 py-1 rounded-sm text-xs transition-colors flex items-center gap-1 " +
+              "px-2.5 py-1 rounded-sm text-xs transition-colors flex items-center gap-1 whitespace-nowrap " +
               (active
-                ? "bg-ms-blue/20 text-white"
-                : "text-ms-muted hover:text-white hover:bg-white/5")
+                ? "bg-ms-blue/25 text-white font-semibold ring-1 ring-inset ring-ms-blue/70"
+                : "text-slate-400 hover:text-white hover:bg-white/5")
             }
             title={LANGUAGE_LABELS[lang].native}
           >

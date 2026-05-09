@@ -36,65 +36,96 @@ export function AutomationPage() {
       <Card>
         <CardHeader title={t("automation.definitions.title")} />
         <CardBody className="p-0">
-          <table className="w-full text-sm">
-            <thead className="text-xs text-ms-muted bg-white/[0.02] border-b border-ms-line">
-              <tr>
-                <th className="text-left px-4 py-2 font-medium">{t("automation.definitions.name")}</th>
-                <th className="text-left px-4 py-2 font-medium">{t("automation.definitions.trigger")}</th>
-                <th className="text-left px-4 py-2 font-medium">{t("automation.definitions.conditions")}</th>
-                <th className="text-left px-4 py-2 font-medium">{t("automation.definitions.actions")}</th>
-                <th className="text-left px-4 py-2 font-medium">{t("automation.definitions.enabled")}</th>
-                <th className="text-right px-4 py-2 font-medium">{t("automation.definitions.run")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(wfQ.data ?? []).map((w) => (
-                <tr key={w.id} className="border-b border-ms-line/60 align-top">
-                  <td className="px-4 py-3">
-                    <div className="font-medium">{w.name}</div>
-                    {w.description && <div className="text-xs text-ms-muted mt-1">{w.description}</div>}
-                  </td>
-                  <td className="px-4 py-3 text-xs">
-                    <code className="bg-white/5 rounded px-1.5 py-0.5">
-                      {w.trigger?.event ?? w.trigger?.type ?? t("automation.definitions.manual")}
-                    </code>
-                  </td>
-                  <td className="px-4 py-3 text-xs">
-                    {(w.conditions ?? []).length === 0 ? (
-                      <span className="text-ms-muted">{t("automation.definitions.noConditions")}</span>
-                    ) : (
+          {/* When the viewport is narrower than the table's min-width, scroll
+              horizontally instead of crushing the columns. */}
+          <div className="overflow-x-auto scrollbar-soft">
+            <table className="w-full text-sm table-fixed min-w-[1080px]">
+              <colgroup>
+                <col style={{ width: "30%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "20%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "10%" }} />
+              </colgroup>
+              <thead className="text-xs text-ms-muted bg-white/[0.02] border-b border-ms-line">
+                <tr>
+                  <th className="text-left px-4 py-2 font-medium whitespace-nowrap">
+                    {t("automation.definitions.name")}
+                  </th>
+                  <th className="text-left px-4 py-2 font-medium whitespace-nowrap">
+                    {t("automation.definitions.trigger")}
+                  </th>
+                  <th className="text-left px-4 py-2 font-medium whitespace-nowrap">
+                    {t("automation.definitions.conditions")}
+                  </th>
+                  <th className="text-left px-4 py-2 font-medium whitespace-nowrap">
+                    {t("automation.definitions.actions")}
+                  </th>
+                  <th className="text-left px-4 py-2 font-medium whitespace-nowrap">
+                    {t("automation.definitions.enabled")}
+                  </th>
+                  <th className="text-right px-4 py-2 font-medium whitespace-nowrap">
+                    {t("automation.definitions.run")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {(wfQ.data ?? []).map((w) => (
+                  <tr key={w.id} className="border-b border-ms-line/60 align-top">
+                    <td className="px-4 py-3">
+                      <div className="font-medium break-words">{w.name}</div>
+                      {w.description && (
+                        <div className="text-xs text-ms-muted mt-1 break-words">{w.description}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      <code className="bg-white/5 rounded px-1.5 py-0.5 inline-block max-w-full break-all">
+                        {w.trigger?.event ?? w.trigger?.type ?? t("automation.definitions.manual")}
+                      </code>
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {(w.conditions ?? []).length === 0 ? (
+                        <span className="text-ms-muted">{t("automation.definitions.noConditions")}</span>
+                      ) : (
+                        <ul className="space-y-0.5">
+                          {(w.conditions ?? []).map((c, i) => (
+                            <li key={i} className="font-mono whitespace-nowrap">
+                              {c.path} {c.op} {String(c.value)}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
                       <ul className="space-y-0.5">
-                        {(w.conditions ?? []).map((c, i) => (
-                          <li key={i} className="font-mono">
-                            {c.path} {c.op} {String(c.value)}
+                        {w.actions.map((a, i) => (
+                          <li key={i} className="font-mono break-all">
+                            {a.type}
                           </li>
                         ))}
                       </ul>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-xs">
-                    <ul className="space-y-0.5">
-                      {w.actions.map((a, i) => (
-                        <li key={i} className="font-mono">
-                          {a.type}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={w.enabled ? "success" : "neutral"}>
-                      {w.enabled ? labelOf("enabled") : labelOf("disabled")}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button variant="primary" onClick={() => run.mutate(w.id)} disabled={run.isPending}>
-                      {t("automation.definitions.run")}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={w.enabled ? "success" : "neutral"}>
+                        {w.enabled ? labelOf("enabled") : labelOf("disabled")}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="primary"
+                        className="min-w-[96px]"
+                        onClick={() => run.mutate(w.id)}
+                        disabled={run.isPending}
+                      >
+                        {t("automation.definitions.run")}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardBody>
       </Card>
 
@@ -106,17 +137,17 @@ export function AutomationPage() {
           )}
           {(runsQ.data ?? []).map((r) => (
             <div key={r.id} className="border border-ms-line rounded-md">
-              <div className="flex items-center justify-between px-4 py-2 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-white/[0.02]">
+                <div className="flex flex-wrap items-center gap-3 min-w-0">
                   <Badge tone={statusTone(r.status)}>{labelOf(r.status)}</Badge>
-                  <div className="font-medium text-sm">
+                  <div className="font-medium text-sm whitespace-nowrap">
                     {t("automation.runs.runHeader", { id: r.id, wfId: r.workflow_id })}
                   </div>
-                  <div className="text-xs text-ms-muted">
+                  <div className="text-xs text-ms-muted whitespace-nowrap">
                     {t("automation.runs.triggerLine", { by: r.triggered_by })}
                   </div>
                 </div>
-                <div className="text-xs text-ms-muted">
+                <div className="text-xs text-ms-muted whitespace-nowrap">
                   {formatDate(r.started_at)} →{" "}
                   {r.finished_at ? formatDate(r.finished_at) : t("automation.runs.runningLabel")}
                 </div>
@@ -124,12 +155,14 @@ export function AutomationPage() {
               <ol className="divide-y divide-ms-line/60">
                 {r.action_logs.map((log) => (
                   <li key={log.id} className="px-4 py-2 flex items-start gap-3">
-                    <div className="h-6 w-6 rounded-full bg-ms-blue/20 border border-ms-blue/30 flex items-center justify-center text-xs">
+                    <div className="h-6 w-6 shrink-0 rounded-full bg-ms-blue/20 border border-ms-blue/30 flex items-center justify-center text-xs">
                       {log.sequence}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium">{log.action_type}</div>
-                      {log.message && <div className="text-xs text-ms-muted">{log.message}</div>}
+                      <div className="text-sm font-medium break-words">{log.action_type}</div>
+                      {log.message && (
+                        <div className="text-xs text-ms-muted break-words">{log.message}</div>
+                      )}
                       {log.output && (
                         <pre className="text-[11px] text-ms-muted bg-black/20 rounded mt-1 p-2 overflow-x-auto scrollbar-soft">
                           {JSON.stringify(log.output, null, 2)}

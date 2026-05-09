@@ -21,7 +21,7 @@ export function Button({
       {...rest}
       disabled={disabled}
       className={clsx(
-        "inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors",
+        "inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors whitespace-nowrap",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         variantClasses[variant],
         className,
