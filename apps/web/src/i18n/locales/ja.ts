@@ -213,7 +213,26 @@ const translation = {
   automation: {
     title: "自動化フロー",
     subtitle:
-      "モック Power Automate エンジン：JSON で定義する trigger / condition / action ワークフロー。",
+      "「あるイベントが発生したら自動でこれを実行する」というルール一覧。手動でも起動でき、結果をすぐに確認できます。",
+    intro: {
+      title: "このページの読み方",
+      body: "各カードが 1 つの自動化ルールで、次の 3 つの要素で構成されます：",
+      legend_trigger: "トリガー",
+      legend_trigger_desc: "ルールを起動するイベント",
+      legend_conditions: "条件",
+      legend_conditions_desc: "実際に実行するために満たすべき前提条件（空でも可）",
+      legend_actions: "アクション",
+      legend_actions_desc:
+        "順番に行う処理：タスク作成・通知送信・Business Central への同期 …",
+      legend_run:
+        "右側の「今すぐ実行」を押すとサンプルデータで手動起動でき、「最近の実行」に結果が表示されます。",
+    },
+    card: {
+      when: "次のとき",
+      if: "条件",
+      do: "実行",
+      no_condition: "（前提条件なし。トリガー発生で即実行）",
+    },
     definitions: {
       title: "Workflow 定義",
       name: "名前",
@@ -224,6 +243,56 @@ const translation = {
       run: "今すぐ実行",
       noConditions: "なし",
       manual: "manual",
+    },
+    events: {
+      opportunity_won: "商談が「受注」になったとき",
+      bpm_request_synced_to_bc: "BPM 申請が Business Central に同期されたとき",
+      onboarding_task_overdue: "オンボーディングタスクが期限超過したとき",
+      manual: "手動トリガー",
+    },
+    action_types: {
+      create_onboarding_project: "顧客オンボーディング案件を作成",
+      create_risk_alert: "リスクアラートを作成",
+      create_ticket: "IT チケットを作成",
+      sync_to_business_central: "Business Central に同期",
+      send_notification: "メール / Teams 通知を送信",
+      call_power_automate_flow: "Power Automate フローを呼び出し",
+      http_post: "HTTP POST を送信",
+    },
+    paths: {
+      amount: "金額",
+      account_id: "顧客 ID",
+      project_id: "案件 ID",
+      request_type: "申請タイプ",
+      currency: "通貨",
+    },
+    ops: {
+      eq: "が次と等しい",
+      neq: "が次と等しくない",
+      gt: ">",
+      gte: "≥",
+      lt: "<",
+      lte: "≤",
+      in: "が次のリストに含まれる",
+      contains: "を含む",
+      exists: "が存在する",
+    },
+    workflows: {
+      wonOpportunity: {
+        title: "商談受注時にオンボーディング案件を自動作成",
+        description:
+          "商談が「受注」に更新されたら、6 つの初期タスクを含むオンボーディング案件を作成し、デリバリーチームに通知します。",
+      },
+      approvedBpm: {
+        title: "BPM 申請が BC へ反映された際に通知",
+        description:
+          "BPM 申請が承認・Business Central 同期されたら、財務チームへ自動メール通知します。",
+      },
+      onboardingOverdue: {
+        title: "オンボーディング遅延時にリスクとチケットを起票",
+        description:
+          "オンボーディングタスクが期限超過した時点で、優先度高のリスクアラートと sev2 IT チケットを自動作成します。",
+      },
     },
     runs: {
       title: "最近の実行",

@@ -214,7 +214,25 @@ const translation = {
   automation: {
     title: "Automation Flows",
     subtitle:
-      "Mock Power Automate engine — JSON-driven trigger / condition / action workflow.",
+      "Every rule of the form \"when something happens, automatically do something else\". Trigger any rule manually to see what it does.",
+    intro: {
+      title: "How to read this page",
+      body: "Each card below is one automation rule, made of three things:",
+      legend_trigger: "Trigger",
+      legend_trigger_desc: "the event that fires the rule",
+      legend_conditions: "Conditions",
+      legend_conditions_desc: "extra checks that must pass (may be empty)",
+      legend_actions: "Actions",
+      legend_actions_desc: "what runs in order — create tasks, notify, sync to Business Central, …",
+      legend_run:
+        "Click \"Run now\" on a card to fire it manually with sample data; the result shows up in \"Recent runs\" below.",
+    },
+    card: {
+      when: "When",
+      if: "If",
+      do: "Then",
+      no_condition: "(no extra condition — runs whenever the trigger fires)",
+    },
     definitions: {
       title: "Workflow definitions",
       name: "Name",
@@ -225,6 +243,56 @@ const translation = {
       run: "Run now",
       noConditions: "none",
       manual: "manual",
+    },
+    events: {
+      opportunity_won: "an opportunity is marked as Won",
+      bpm_request_synced_to_bc: "a BPM request has been synced to Business Central",
+      onboarding_task_overdue: "an onboarding task is overdue",
+      manual: "manual trigger",
+    },
+    action_types: {
+      create_onboarding_project: "create a customer onboarding project",
+      create_risk_alert: "create a risk alert",
+      create_ticket: "create an IT ticket",
+      sync_to_business_central: "sync to Business Central",
+      send_notification: "send email / Teams notification",
+      call_power_automate_flow: "invoke a Power Automate flow",
+      http_post: "send an HTTP POST request",
+    },
+    paths: {
+      amount: "amount",
+      account_id: "account id",
+      project_id: "project id",
+      request_type: "request type",
+      currency: "currency",
+    },
+    ops: {
+      eq: "is equal to",
+      neq: "is not equal to",
+      gt: ">",
+      gte: "≥",
+      lt: "<",
+      lte: "≤",
+      in: "is in",
+      contains: "contains",
+      exists: "exists",
+    },
+    workflows: {
+      wonOpportunity: {
+        title: "Auto-create onboarding when an opportunity wins",
+        description:
+          "When an opportunity is marked Won, create the full onboarding project (with 6 starter tasks) and notify the delivery team.",
+      },
+      approvedBpm: {
+        title: "Notify finance once a BPM request reaches Business Central",
+        description:
+          "After a BPM request is approved and synced to Business Central, email the finance team.",
+      },
+      onboardingOverdue: {
+        title: "Raise a risk alert + ticket when onboarding tasks slip",
+        description:
+          "When any onboarding task becomes overdue, open a high-priority risk alert and a sev2 IT ticket.",
+      },
     },
     runs: {
       title: "Recent runs",

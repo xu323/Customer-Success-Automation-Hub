@@ -209,7 +209,26 @@ const translation = {
   },
   automation: {
     title: "自動化流程",
-    subtitle: "Mock Power Automate engine：JSON 驅動的 trigger / condition / action workflow。",
+    subtitle:
+      "系統內所有「當某事件發生時自動執行某些動作」的規則。可手動觸發看執行結果。",
+    intro: {
+      title: "怎麼讀這頁？",
+      body: "每張卡片就是一條自動化規則，由三件事組成：",
+      legend_trigger: "觸發",
+      legend_trigger_desc: "什麼事件會啟動這條規則",
+      legend_conditions: "條件",
+      legend_conditions_desc: "要符合什麼前提才會真的執行（可空）",
+      legend_actions: "動作",
+      legend_actions_desc: "依序要做什麼，例如建立任務、寄通知、同步到 Business Central",
+      legend_run:
+        "點右側「立即執行」可用一筆假資料手動觸發，下方「近期執行」會即時顯示這次跑了哪些動作。",
+    },
+    card: {
+      when: "當",
+      if: "若",
+      do: "執行",
+      no_condition: "（沒有前置條件，事件一發生就執行）",
+    },
     definitions: {
       title: "Workflow 定義",
       name: "名稱",
@@ -220,6 +239,56 @@ const translation = {
       run: "立即執行",
       noConditions: "無條件",
       manual: "manual",
+    },
+    events: {
+      opportunity_won: "商機被標記為「成交」",
+      bpm_request_synced_to_bc: "BPM 請求已同步至 Business Central",
+      onboarding_task_overdue: "客戶導入任務逾期",
+      manual: "手動觸發",
+    },
+    action_types: {
+      create_onboarding_project: "建立客戶導入專案",
+      create_risk_alert: "建立風險警示",
+      create_ticket: "建立 IT 工單",
+      sync_to_business_central: "同步至 Business Central",
+      send_notification: "寄送 email / Teams 通知",
+      call_power_automate_flow: "呼叫 Power Automate flow",
+      http_post: "發出 HTTP POST 請求",
+    },
+    paths: {
+      amount: "金額",
+      account_id: "客戶 ID",
+      project_id: "專案 ID",
+      request_type: "請求類型",
+      currency: "幣別",
+    },
+    ops: {
+      eq: "等於",
+      neq: "不等於",
+      gt: "大於",
+      gte: "≥",
+      lt: "小於",
+      lte: "≤",
+      in: "屬於",
+      contains: "包含",
+      exists: "存在",
+    },
+    workflows: {
+      wonOpportunity: {
+        title: "商機成交後自動建立客戶導入專案",
+        description:
+          "當商機被標記為成交，自動建立完整的客戶導入專案（含 6 個預設任務），並通知交付團隊。",
+      },
+      approvedBpm: {
+        title: "BPM 請求同步至 Business Central 後寄送通知",
+        description:
+          "當 BPM 簽核完成並寫入 Business Central 後，自動發送 email 給財務團隊。",
+      },
+      onboardingOverdue: {
+        title: "導入任務逾期時自動建立風險警示與工單",
+        description:
+          "當任一客戶導入任務逾期，自動建立高優先風險警示與一張 sev2 IT 工單。",
+      },
     },
     runs: {
       title: "近期執行",
